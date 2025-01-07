@@ -2091,9 +2091,8 @@
                 "tongue",
                 "long_tongue"
             ]
-        }
-        ],
-        "Torso": [
+    },
+    "Torso": [
             "areolae",
             "large_areolae",
             "glands_of_montgomery",
