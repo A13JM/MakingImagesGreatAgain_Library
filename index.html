@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Danbooru Group Tag Search</title>
+  <style>
+    /* Root Variables for Dark Mode */
+    :root {
+      --background-color: #121212;
+      --text-color: #e0e0e0;
+      --title-background: #1e1e1e;
+      --title-hover-background: #333333;
+      --border-color: #333333;
+      --link-color: #bb86fc;
+      --link-hover-color: #3700b3;
+      --highlight-color: #ffeb3b; /* Bright yellow for highlight */
+      --loader-border: #3f51b5;
+      --loader-border-top: #bb86fc;
+      --button-background: #bb86fc;
+      --button-hover-background: #3700b3;
+      --notification-background: #333333;
+      --notification-text-color: #e0e0e0;
+      --notification-border-color: #555555;
+      /* Scrollbar Colors */
+      --scrollbar-track: #1e1e1e;
+      --scrollbar-thumb: #bb86fc;
+      --scrollbar-thumb-hover: #3700b3;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      transition: background-color 0.5s ease, color 0.5s ease;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      
+      /* Scrollbar Styling for Firefox */
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+
+    /* Scrollbar Styling for WebKit Browsers */
+    body::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    body::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+    }
+
+    body::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+      border-radius: 6px;
+      border: 3px solid var(--scrollbar-track);
+    }
+
+    body::-webkit-scrollbar-thumb:hover {
+      background-color: var(--scrollbar-thumb-hover);
+    }
+
+    .container {
+      margin: 20px;
+      animation: fadeIn 1s ease-in-out;
+      flex: 1;
+    }
+
+    .category {
+      margin: 10px 0;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: slideUp 0.5s forwards;
+      transition: transform 0.3s ease; /* Transition for scaling */
+    }
+    /* Stagger animation for categories */
+    .category:nth-child(1) { animation-delay: 0.1s; }
+    .category:nth-child(2) { animation-delay: 0.2s; }
+    .category:nth-child(3) { animation-delay: 0.3s; }
+    /* Add more nth-child selectors as needed */
+
+    .category:hover {
+      transform: translateY(20px) scale(1.02); /* Scale up slightly on hover */
+      z-index: 1; /* Ensure hovered category appears above others */
+    }
+
+    .title {
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 5px;
+      background-color: var(--title-background);
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      transition: background-color 0.3s, transform 0.3s;
+      position: relative; /* For z-index if needed */
+    }
+    .title:hover {
+      background-color: var(--title-hover-background);
+      transform: scale(1.02);
+    }
+
+    .list {
+      max-height: 0; /* Collapsed by default */
+      overflow: hidden;
+      margin-left: 20px;
+      padding-left: 10px;
+      border-left: 2px solid var(--border-color);
+      transition: max-height 0.5s ease, opacity 0.5s ease;
+      opacity: 0;
+    }
+    /* Increased max-height to avoid cutting off large lists */
+    .list.active {
+      max-height: 9999px; 
+      opacity: 1;
+    }
+
+    .list-content {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+    .list-content ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+    .list-content li {
+      margin: 5px 0;
+    }
+    /* Flexible row for text + copy button */
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 8px; 
+    }
+
+    /* Style clickable links that point to matching groups */
+    .group-link {
+      color: var(--link-color);
+      cursor: pointer;
+      text-decoration: underline;
+      background: none;
+      border: none;
+      padding: 0;
+      font: inherit;
+    }
+    .group-link:hover, .group-link:focus {
+      color: var(--link-hover-color);
+      outline: none;
+      text-decoration: none;
+    }
+
+    /* Copy button styles */
+    .copy-button {
+      background-color: var(--button-background);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+    }
+    .copy-button:hover {
+      background-color: var(--button-hover-background);
+    }
+
+    /* Highlight effect for title */
+    .highlight {
+      background-color: var(--highlight-color);
+      animation: highlightFade 2s forwards;
+    }
+
+    /* Highlight fade animation */
+    @keyframes highlightFade {
+      0% { background-color: var(--highlight-color); }
+      100% { background-color: var(--title-background); }
+    }
+
+    /* Fade-in animation for container */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    /* Slide-up animation for categories */
+    @keyframes slideUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Loader styles */
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--loader-border-top);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-left: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* "Load More" button (for large arrays) */
+    .load-more {
+      display: block;
+      margin: 10px 0;
+      padding: 8px 12px;
+      background-color: var(--button-background);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      transition: background-color 0.3s ease;
+    }
+    .load-more:hover {
+      background-color: var(--button-hover-background);
+    }
+
+    /* Footer Styles */
+    footer {
+      text-align: center;
+      padding: 10px 0;
+      background-color: var(--title-background);
+      color: var(--text-color);
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* Notification Styles */
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--notification-background);
+      color: var(--notification-text-color);
+      padding: 10px 20px;
+      border: 1px solid var(--notification-border-color);
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      z-index: 1000;
+    }
+    .notification.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Danbooru Group Tag Search</h1>
+    <div id="json-display">Loading...</div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    Made by A13JM
+  </footer>
+
+  <!-- Notification Element -->
+  <div id="notification" class="notification"></div>
+
+  <script>
+    /***************************************************
+     * Configuration
+     ***************************************************/
+    const jsonUrl = 'https://raw.githubusercontent.com/A13JM/MakingImagesGreatAgain_Library/refs/heads/main/tag_groups_and_lists_output.json';
+    const CHUNK_SIZE = 50; // Number of items to load per chunk
+    const HIGHLIGHT_DURATION = 2000; // Duration in milliseconds
+    const NOTIFICATION_DURATION = 2000; // Duration for notifications
+
+    /***************************************************
+     * Global Maps / Utilities
+     ***************************************************/
+    // Holds references to each category by standardized name
+    // e.g., 'tag group:hair color' => { titleElement, listDiv, categoryDiv, value }
+    const groupMap = new Map();
+
+    // Convert a category/item name to a standardized form
+    // so "Tag Group:Hair Color" and "tag_group:hair_color" both become "tag group:hair color"
+    function standardizeName(name) {
+      if (!name) return '';
+      return name
+        .toLowerCase()
+        .replace(/_/g, ' ') // replace underscores with spaces
+        .trim();
+    }
+
+    /**
+     * Show a temporary notification to the user.
+     * @param {string} message - The message to display.
+     */
+    function showNotification(message) {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.classList.add('show');
+
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, NOTIFICATION_DURATION);
+    }
+
+    /***************************************************
+     * Fetch & Render
+     ***************************************************/
+    async function fetchAndDisplayJSON() {
+      try {
+        const response = await fetch(jsonUrl);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+        renderJSON(data);
+      } catch (error) {
+        document.getElementById('json-display').textContent = `Error fetching JSON data: ${error.message}`;
+      }
+    }
+
+    function renderJSON(jsonData) {
+      const display = document.getElementById('json-display');
+      display.innerHTML = '';
+
+      // Build categories (store them in groupMap)
+      for (const [key, value] of Object.entries(jsonData)) {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category';
+
+        // Title (click to expand/collapse)
+        const title = document.createElement('div');
+        title.className = 'title';
+        title.textContent = key;
+
+        // Collapsible list container
+        const listDiv = document.createElement('div');
+        listDiv.className = 'list';
+
+        // The content container inside the list
+        const listContent = document.createElement('div');
+        listContent.className = 'list-content';
+        listDiv.appendChild(listContent);
+
+        // Expand/Collapse behavior
+        title.onclick = () => {
+          if (!listDiv.classList.contains('active')) {
+            listDiv.classList.add('active');
+            // Render lazy if not already loaded
+            if (!listDiv.dataset.loaded) {
+              renderListContent(value, listContent);
+              listDiv.dataset.loaded = true;
+            }
+          } else {
+            listDiv.classList.remove('active');
+          }
+        };
+
+        // Append everything
+        categoryDiv.appendChild(title);
+        categoryDiv.appendChild(listDiv);
+        display.appendChild(categoryDiv);
+
+        // Store in groupMap
+        groupMap.set(standardizeName(key), {
+          titleElement: title,
+          listDiv,
+          categoryDiv,
+          value
+        });
+      }
+    }
+
+    /**
+     * Render the content (sub-objects, arrays, strings) inside a category.
+     * Runs lazily when the category is first expanded.
+     */
+    function renderListContent(value, container) {
+      // Show a loader while rendering
+      container.innerHTML = '<div class="loader"></div> Loading...';
+
+      // Simulate async loading delay (optional for demo)
+      setTimeout(() => {
+        container.innerHTML = ''; // remove loader
+
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          // Value is an object
+          for (const [subKey, subValue] of Object.entries(value)) {
+            const subListTitle = document.createElement('div');
+            subListTitle.textContent = subKey;
+            subListTitle.style.fontWeight = 'bold';
+            subListTitle.style.marginTop = '10px';
+            container.appendChild(subListTitle);
+
+            const ul = document.createElement('ul');
+            container.appendChild(ul);
+
+            if (Array.isArray(subValue)) {
+              if (subValue.length > CHUNK_SIZE) {
+                renderVirtualList(subValue, ul);
+              } else {
+                subValue.forEach(item => {
+                  const li = createListItem(item);
+                  ul.appendChild(li);
+                });
+              }
+            } else if (typeof subValue === 'string') {
+              const li = createListItem(subValue);
+              ul.appendChild(li);
+            }
+          }
+        } else if (Array.isArray(value)) {
+          // Value is a plain array
+          if (value.length > CHUNK_SIZE) {
+            renderVirtualList(value, container);
+          } else {
+            const ul = document.createElement('ul');
+            value.forEach(item => {
+              const li = createListItem(item);
+              ul.appendChild(li);
+            });
+            container.appendChild(ul);
+          }
+        } else if (typeof value === 'string') {
+          // Single string
+          const ul = document.createElement('ul');
+          const li = createListItem(value);
+          ul.appendChild(li);
+          container.appendChild(ul);
+        }
+      }, 500);
+    }
+
+    /***************************************************
+     * Create a list item. If it matches a known group,
+     * make it clickable to open that group.
+     * Also adds a "Copy" button to copy the item text.
+     ***************************************************/
+    function createListItem(text) {
+      const li = document.createElement('li');
+      const rowDiv = document.createElement('div');
+      rowDiv.classList.add('item-row');
+
+      const standardized = standardizeName(text);
+
+      if (groupMap.has(standardized)) {
+        // It's a known group -> clickable link
+        const linkBtn = document.createElement('button');
+        linkBtn.textContent = text;
+        linkBtn.classList.add('group-link');
+        linkBtn.setAttribute('aria-label', `Open group ${text}`);
+        linkBtn.onclick = () => openLinkedGroup(standardized);
+        rowDiv.appendChild(linkBtn);
+      } else {
+        // Just plain text
+        const span = document.createElement('span');
+        span.textContent = text;
+        rowDiv.appendChild(span);
+      }
+
+      // Copy button (notifying the user on copy)
+      const copyBtn = document.createElement('button');
+      copyBtn.textContent = 'Copy';
+      copyBtn.classList.add('copy-button');
+
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          // Temporarily change button text to "Copied!"
+          copyBtn.textContent = 'Copied!';
+          copyBtn.disabled = true; // Prevent multiple clicks
+          setTimeout(() => {
+            copyBtn.textContent = 'Copy';
+            copyBtn.disabled = false;
+          }, 1500);
+        } catch (err) {
+          console.error('Failed to copy!', err);
+          showNotification('Failed to copy text.');
+        }
+      };
+
+      rowDiv.appendChild(copyBtn);
+      li.appendChild(rowDiv);
+      return li;
+    }
+
+    /**
+     * Toggle open a matching group (if it exists),
+     * scroll to it, and highlight its title briefly.
+     */
+    function openLinkedGroup(stdName) {
+      const groupInfo = groupMap.get(stdName);
+      if (!groupInfo) return;
+
+      // Ensure it's expanded
+      if (!groupInfo.listDiv.classList.contains('active')) {
+        groupInfo.listDiv.classList.add('active');
+        // Render lazy if not already loaded
+        if (!groupInfo.listDiv.dataset.loaded) {
+          renderListContent(groupInfo.value, groupInfo.listDiv.querySelector('.list-content'));
+          groupInfo.listDiv.dataset.loaded = true;
+        }
+      }
+
+      // Scroll into view
+      groupInfo.titleElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Highlight the title
+      groupInfo.titleElement.classList.remove('highlight'); // reset animation
+      void groupInfo.titleElement.offsetWidth;              // trigger reflow
+      groupInfo.titleElement.classList.add('highlight');
+
+      // Remove highlight after the duration
+      setTimeout(() => {
+        groupInfo.titleElement.classList.remove('highlight');
+      }, HIGHLIGHT_DURATION);
+    }
+
+    /***************************************************
+     * Chunked (Virtual) Rendering for Large Arrays
+     ***************************************************/
+    function renderVirtualList(items, container) {
+      // Create the visible list
+      const ul = document.createElement('ul');
+      container.appendChild(ul);
+
+      let start = 0;
+      let end = CHUNK_SIZE;
+      const total = items.length;
+
+      function renderChunk() {
+        const fragment = document.createDocumentFragment();
+        for (let i = start; i < end && i < total; i++) {
+          const li = createListItem(items[i]);
+          fragment.appendChild(li);
+        }
+        ul.appendChild(fragment);
+
+        start = end;
+        end += CHUNK_SIZE;
+
+        // If there's still more data to load, show the button; otherwise hide it
+        if (start < total) {
+          loadMoreBtn.style.display = 'block';
+        } else {
+          loadMoreBtn.style.display = 'none';
+        }
+      }
+
+      // Initial chunk
+      renderChunk();
+
+      // "Load More" button
+      const loadMoreBtn = document.createElement('button');
+      loadMoreBtn.textContent = 'Load More';
+      loadMoreBtn.className = 'load-more';
+      loadMoreBtn.onclick = () => {
+        renderChunk();
+      };
+      container.appendChild(loadMoreBtn);
+    }
+
+    /***************************************************
+     * Keyboard Shortcut: Shift + F to Fold All Groups
+     ***************************************************/
+    document.addEventListener('keydown', (event) => {
+      if (event.shiftKey && event.key.toLowerCase() === 'f') {
+        foldAllGroups();
+        showNotification('All groups have been folded.');
+      }
+    });
+
+    /**
+     * Collapse all expanded groups and scroll to the top of the page.
+     */
+    function foldAllGroups() {
+      groupMap.forEach(groupInfo => {
+        if (groupInfo.listDiv.classList.contains('active')) {
+          groupInfo.listDiv.classList.remove('active');
+        }
+      });
+
+      // Scroll to the top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /***************************************************
+     * Start!
+     ***************************************************/
+    fetchAndDisplayJSON();
+  </script>
+</body>
+</html>
