@@ -48,17 +48,14 @@
     body::-webkit-scrollbar {
       width: 12px;
     }
-
     body::-webkit-scrollbar-track {
       background: var(--scrollbar-track);
     }
-
     body::-webkit-scrollbar-thumb {
       background-color: var(--scrollbar-thumb);
       border-radius: 6px;
       border: 3px solid var(--scrollbar-track);
     }
-
     body::-webkit-scrollbar-thumb:hover {
       background-color: var(--scrollbar-thumb-hover);
     }
@@ -69,7 +66,7 @@
       flex: 1;
     }
 
-    .category {
+    .category, .sub-category {
       margin: 10px 0;
       opacity: 0;
       transform: translateY(20px);
@@ -80,14 +77,13 @@
     .category:nth-child(1) { animation-delay: 0.1s; }
     .category:nth-child(2) { animation-delay: 0.2s; }
     .category:nth-child(3) { animation-delay: 0.3s; }
-    /* Add more nth-child selectors as needed */
 
-    .category:hover {
-      transform: translateY(20px) scale(1.02); /* Scale up slightly on hover */
-      z-index: 1; /* Ensure hovered category appears above others */
+    .category:hover, .sub-category:hover {
+      transform: translateY(20px) scale(1.02);
+      z-index: 1;
     }
 
-    .title {
+    .title, .sub-title {
       font-weight: bold;
       cursor: pointer;
       margin-bottom: 5px;
@@ -96,15 +92,15 @@
       border: 1px solid var(--border-color);
       border-radius: 5px;
       transition: background-color 0.3s, transform 0.3s;
-      position: relative; /* For z-index if needed */
+      position: relative;
     }
-    .title:hover {
+    .title:hover, .sub-title:hover {
       background-color: var(--title-hover-background);
       transform: scale(1.02);
     }
 
-    .list {
-      max-height: 0; /* Collapsed by default */
+    .list, .sub-list {
+      max-height: 0;
       overflow: hidden;
       margin-left: 20px;
       padding-left: 10px;
@@ -112,23 +108,22 @@
       transition: max-height 0.5s ease, opacity 0.5s ease;
       opacity: 0;
     }
-    /* Increased max-height to avoid cutting off large lists */
-    .list.active {
+    .list.active, .sub-list.active {
       max-height: 9999px; 
       opacity: 1;
     }
 
-    .list-content {
+    .list-content, .sub-list-content {
       list-style-type: none;
       padding: 0;
       margin: 0;
     }
-    .list-content ul {
+    ul {
       list-style-type: none;
       padding: 0;
       margin: 0;
     }
-    .list-content li {
+    li {
       margin: 5px 0;
     }
     /* Flexible row for text + copy button */
@@ -174,8 +169,6 @@
       background-color: var(--highlight-color);
       animation: highlightFade 2s forwards;
     }
-
-    /* Highlight fade animation */
     @keyframes highlightFade {
       0% { background-color: var(--highlight-color); }
       100% { background-color: var(--title-background); }
@@ -275,29 +268,29 @@
      ***************************************************/
     const jsonUrl = 'https://raw.githubusercontent.com/A13JM/MakingImagesGreatAgain_Library/refs/heads/main/tag_groups_and_lists_output.json';
     const CHUNK_SIZE = 50; // Number of items to load per chunk
-    const HIGHLIGHT_DURATION = 2000; // Duration in milliseconds
+    const HIGHLIGHT_DURATION = 2000; // Duration in ms
     const NOTIFICATION_DURATION = 2000; // Duration for notifications
 
     /***************************************************
      * Global Maps / Utilities
      ***************************************************/
-    // Holds references to each category by standardized name
-    // e.g., 'tag group:hair color' => { titleElement, listDiv, categoryDiv, value }
-    const groupMap = new Map();
+    const groupMap = new Map(); // For cross-linking
+    let globalJsonData = null;  // Store the data so we can re-render if needed
 
-    // Convert a category/item name to a standardized form
-    // so "Tag Group:Hair Color" and "tag_group:hair_color" both become "tag group:hair color"
+    /**
+     * Convert a category/item name to a standardized form
+     * for internal groupMap lookups (underscores -> spaces).
+     */
     function standardizeName(name) {
       if (!name) return '';
       return name
         .toLowerCase()
-        .replace(/_/g, ' ') // replace underscores with spaces
+        .replace(/_/g, ' ')
         .trim();
     }
 
     /**
      * Show a temporary notification to the user.
-     * @param {string} message - The message to display.
      */
     function showNotification(message) {
       const notification = document.getElementById('notification');
@@ -310,135 +303,157 @@
     }
 
     /***************************************************
-     * Fetch & Render
+     * Fetch & Entry Point
      ***************************************************/
     async function fetchAndDisplayJSON() {
       try {
         const response = await fetch(jsonUrl);
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
-        renderJSON(data);
+
+        globalJsonData = data;
+        renderAllGroups();
       } catch (error) {
         document.getElementById('json-display').textContent = `Error fetching JSON data: ${error.message}`;
       }
     }
 
-    function renderJSON(jsonData) {
+    // Renders all top-level groups
+    function renderAllGroups() {
+      // Clear existing
       const display = document.getElementById('json-display');
       display.innerHTML = '';
+      groupMap.clear();
 
-      // Build categories (store them in groupMap)
-      for (const [key, value] of Object.entries(jsonData)) {
+      // For each top-level key in JSON, create a collapsible group
+      for (const [key, value] of Object.entries(globalJsonData)) {
+        // Render as a "top-level" category
         const categoryDiv = document.createElement('div');
         categoryDiv.className = 'category';
-
-        // Title (click to expand/collapse)
-        const title = document.createElement('div');
-        title.className = 'title';
-        title.textContent = key;
-
-        // Collapsible list container
-        const listDiv = document.createElement('div');
-        listDiv.className = 'list';
-
-        // The content container inside the list
-        const listContent = document.createElement('div');
-        listContent.className = 'list-content';
-        listDiv.appendChild(listContent);
-
-        // Expand/Collapse behavior
-        title.onclick = () => {
-          if (!listDiv.classList.contains('active')) {
-            listDiv.classList.add('active');
-            // Render lazy if not already loaded
-            if (!listDiv.dataset.loaded) {
-              renderListContent(value, listContent);
-              listDiv.dataset.loaded = true;
-            }
-          } else {
-            listDiv.classList.remove('active');
-          }
-        };
-
-        // Append everything
-        categoryDiv.appendChild(title);
-        categoryDiv.appendChild(listDiv);
         display.appendChild(categoryDiv);
 
-        // Store in groupMap
-        groupMap.set(standardizeName(key), {
-          titleElement: title,
-          listDiv,
-          categoryDiv,
-          value
-        });
+        // This handles creation of the title, collapsible list, etc.
+        renderGroup(key, value, categoryDiv, 'title', 'list');
       }
     }
 
+    /***************************************************
+     * Recursively Render a Group (or SubGroup)
+     ***************************************************/
     /**
-     * Render the content (sub-objects, arrays, strings) inside a category.
-     * Runs lazily when the category is first expanded.
+     * Render a collapsible group. 
+     * 
+     * @param {string} groupKey - The name/key of this group
+     * @param {any} groupValue - The data (string, array, or object)
+     * @param {HTMLElement} parentElement - The container in which to place the group
+     * @param {string} titleClass - CSS class to use for the clickable title
+     * @param {string} listClass - CSS class for the collapsible list container
      */
-    function renderListContent(value, container) {
+    function renderGroup(groupKey, groupValue, parentElement, titleClass, listClass) {
+      // Create the clickable title
+      const titleEl = document.createElement('div');
+      titleEl.className = titleClass;
+      titleEl.textContent = groupKey;
+      parentElement.appendChild(titleEl);
+
+      // Create the collapsible container
+      const listEl = document.createElement('div');
+      listEl.className = listClass;
+      parentElement.appendChild(listEl);
+
+      // Keep track in groupMap for cross-linking
+      const stdKey = standardizeName(groupKey);
+      groupMap.set(stdKey, {
+        titleElement: titleEl,
+        listDiv: listEl,
+        value: groupValue
+      });
+
+      // On click => expand/collapse
+      titleEl.onclick = () => {
+        if (!listEl.classList.contains('active')) {
+          listEl.classList.add('active');
+          // Lazy render if needed
+          if (!listEl.dataset.loaded) {
+            renderGroupContent(groupKey, groupValue, listEl, true);
+            listEl.dataset.loaded = true;
+          }
+        } else {
+          listEl.classList.remove('active');
+        }
+      };
+    }
+
+    /**
+     * Render the content inside a group’s collapsible container.
+     * - If it's an object, create subgroups for each key.
+     * - If it's an array, render the items (with chunked loading).
+     * - If it's a string, render a single item.
+     *
+     * **Modification:** Skip rendering subgroups named "List_Tags" and directly display their tags.
+     *
+     * @param {string} groupKey - The name/key of the current group
+     * @param {any} value - The data to render
+     * @param {HTMLElement} container - Where to render
+     * @param {boolean} isTopLevel - If true, use sub-titles for objects
+     */
+    function renderGroupContent(groupKey, value, container, isTopLevel) {
       // Show a loader while rendering
       container.innerHTML = '<div class="loader"></div> Loading...';
 
-      // Simulate async loading delay (optional for demo)
       setTimeout(() => {
         container.innerHTML = ''; // remove loader
 
-        if (typeof value === 'object' && !Array.isArray(value)) {
-          // Value is an object
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          // It's an object => For each [subKey, subValue], create a sub-group
           for (const [subKey, subValue] of Object.entries(value)) {
-            const subListTitle = document.createElement('div');
-            subListTitle.textContent = subKey;
-            subListTitle.style.fontWeight = 'bold';
-            subListTitle.style.marginTop = '10px';
-            container.appendChild(subListTitle);
+            if (subKey === 'List_Tags') {
+              // **Skip the "List_Tags" group and directly render its tags**
+              renderListItems(subValue, container);
+            } else {
+              // sub-category container
+              const subDiv = document.createElement('div');
+              subDiv.className = 'sub-category';
+              container.appendChild(subDiv);
 
-            const ul = document.createElement('ul');
-            container.appendChild(ul);
-
-            if (Array.isArray(subValue)) {
-              if (subValue.length > CHUNK_SIZE) {
-                renderVirtualList(subValue, ul);
-              } else {
-                subValue.forEach(item => {
-                  const li = createListItem(item);
-                  ul.appendChild(li);
-                });
-              }
-            } else if (typeof subValue === 'string') {
-              const li = createListItem(subValue);
-              ul.appendChild(li);
+              // Create a nested subgroup
+              renderGroup(subKey, subValue, subDiv, 'sub-title', 'sub-list');
             }
           }
         } else if (Array.isArray(value)) {
-          // Value is a plain array
-          if (value.length > CHUNK_SIZE) {
-            renderVirtualList(value, container);
-          } else {
-            const ul = document.createElement('ul');
-            value.forEach(item => {
-              const li = createListItem(item);
-              ul.appendChild(li);
-            });
-            container.appendChild(ul);
-          }
+          // It's an array => render either chunked or all at once
+          renderListItems(value, container);
         } else if (typeof value === 'string') {
           // Single string
-          const ul = document.createElement('ul');
-          const li = createListItem(value);
-          ul.appendChild(li);
-          container.appendChild(ul);
+          renderListItems([value], container);
         }
-      }, 500);
+      }, 300); // small delay for demonstration
+    }
+
+    /**
+     * Render list items directly (used when skipping "List_Tags")
+     *
+     * @param {Array|string} items - The items to render
+     * @param {HTMLElement} container - Where to render
+     */
+    function renderListItems(items, container) {
+      // Ensure items is an array
+      const itemArray = Array.isArray(items) ? items : [items];
+
+      if (itemArray.length > CHUNK_SIZE) {
+        renderVirtualList(itemArray, container);
+      } else {
+        const ul = document.createElement('ul');
+        itemArray.forEach(item => {
+          const li = createListItem(item);
+          ul.appendChild(li);
+        });
+        container.appendChild(ul);
+      }
     }
 
     /***************************************************
-     * Create a list item. If it matches a known group,
-     * make it clickable to open that group.
-     * Also adds a "Copy" button to copy the item text.
+     * Create a List Item
      ***************************************************/
     function createListItem(text) {
       const li = document.createElement('li');
@@ -447,12 +462,11 @@
 
       const standardized = standardizeName(text);
 
+      // If this text matches a known group (even nested), make it clickable
       if (groupMap.has(standardized)) {
-        // It's a known group -> clickable link
         const linkBtn = document.createElement('button');
         linkBtn.textContent = text;
         linkBtn.classList.add('group-link');
-        linkBtn.setAttribute('aria-label', `Open group ${text}`);
         linkBtn.onclick = () => openLinkedGroup(standardized);
         rowDiv.appendChild(linkBtn);
       } else {
@@ -462,17 +476,15 @@
         rowDiv.appendChild(span);
       }
 
-      // Copy button (notifying the user on copy)
+      // Copy button
       const copyBtn = document.createElement('button');
       copyBtn.textContent = 'Copy';
       copyBtn.classList.add('copy-button');
-
       copyBtn.onclick = async () => {
         try {
           await navigator.clipboard.writeText(text);
-          // Temporarily change button text to "Copied!"
           copyBtn.textContent = 'Copied!';
-          copyBtn.disabled = true; // Prevent multiple clicks
+          copyBtn.disabled = true;
           setTimeout(() => {
             copyBtn.textContent = 'Copy';
             copyBtn.disabled = false;
@@ -488,33 +500,30 @@
       return li;
     }
 
-    /**
-     * Toggle open a matching group (if it exists),
-     * scroll to it, and highlight its title briefly.
-     */
+    /***************************************************
+     * Cross-Linking / Highlighting
+     ***************************************************/
     function openLinkedGroup(stdName) {
       const groupInfo = groupMap.get(stdName);
       if (!groupInfo) return;
 
-      // Ensure it's expanded
+      // Expand if not already
       if (!groupInfo.listDiv.classList.contains('active')) {
         groupInfo.listDiv.classList.add('active');
-        // Render lazy if not already loaded
         if (!groupInfo.listDiv.dataset.loaded) {
-          renderListContent(groupInfo.value, groupInfo.listDiv.querySelector('.list-content'));
+          renderGroupContent(groupInfo.titleElement.textContent, groupInfo.value, groupInfo.listDiv, false);
           groupInfo.listDiv.dataset.loaded = true;
         }
       }
 
-      // Scroll into view
+      // Scroll to it
       groupInfo.titleElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-      // Highlight the title
-      groupInfo.titleElement.classList.remove('highlight'); // reset animation
-      void groupInfo.titleElement.offsetWidth;              // trigger reflow
+      // Flash highlight
+      groupInfo.titleElement.classList.remove('highlight');
+      void groupInfo.titleElement.offsetWidth; // reflow
       groupInfo.titleElement.classList.add('highlight');
 
-      // Remove highlight after the duration
       setTimeout(() => {
         groupInfo.titleElement.classList.remove('highlight');
       }, HIGHLIGHT_DURATION);
@@ -524,7 +533,6 @@
      * Chunked (Virtual) Rendering for Large Arrays
      ***************************************************/
     function renderVirtualList(items, container) {
-      // Create the visible list
       const ul = document.createElement('ul');
       container.appendChild(ul);
 
@@ -543,29 +551,22 @@
         start = end;
         end += CHUNK_SIZE;
 
-        // If there's still more data to load, show the button; otherwise hide it
-        if (start < total) {
-          loadMoreBtn.style.display = 'block';
-        } else {
-          loadMoreBtn.style.display = 'none';
-        }
+        // Show/hide the Load More button
+        loadMoreBtn.style.display = (start < total) ? 'block' : 'none';
       }
 
       // Initial chunk
       renderChunk();
 
-      // "Load More" button
       const loadMoreBtn = document.createElement('button');
       loadMoreBtn.textContent = 'Load More';
       loadMoreBtn.className = 'load-more';
-      loadMoreBtn.onclick = () => {
-        renderChunk();
-      };
+      loadMoreBtn.onclick = () => renderChunk();
       container.appendChild(loadMoreBtn);
     }
 
     /***************************************************
-     * Keyboard Shortcut: Shift + F to Fold All Groups
+     * Keyboard Shortcut: Shift + F => Fold All
      ***************************************************/
     document.addEventListener('keydown', (event) => {
       if (event.shiftKey && event.key.toLowerCase() === 'f') {
@@ -574,17 +575,12 @@
       }
     });
 
-    /**
-     * Collapse all expanded groups and scroll to the top of the page.
-     */
     function foldAllGroups() {
       groupMap.forEach(groupInfo => {
         if (groupInfo.listDiv.classList.contains('active')) {
           groupInfo.listDiv.classList.remove('active');
         }
       });
-
-      // Scroll to the top smoothly
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
