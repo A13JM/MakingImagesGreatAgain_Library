@@ -28,6 +28,29 @@
       --scrollbar-thumb-hover: #3700b3;
     }
 
+    /* Light Mode Variables */
+    .light-mode {
+      --background-color: #ffffff;
+      --text-color: #000000;
+      --title-background: #f0f0f0;
+      --title-hover-background: #e0e0e0;
+      --border-color: #cccccc;
+      --link-color: #1a0dab;
+      --link-hover-color: #d14836;
+      --highlight-color: #ffeb3b; /* Bright yellow for highlight */
+      --loader-border: #3f51b5;
+      --loader-border-top: #1a73e8;
+      --button-background: #1a73e8;
+      --button-hover-background: #1669c1;
+      --notification-background: #f0f0f0;
+      --notification-text-color: #000000;
+      --notification-border-color: #cccccc;
+      /* Scrollbar Colors */
+      --scrollbar-track: #f0f0f0;
+      --scrollbar-thumb: #1a73e8;
+      --scrollbar-thumb-hover: #1669c1;
+    }
+
     body {
       font-family: Arial, sans-serif;
       background-color: var(--background-color);
@@ -38,7 +61,7 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      
+
       /* Scrollbar Styling for Firefox */
       scrollbar-width: thin;
       scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
@@ -58,6 +81,54 @@
     }
     body::-webkit-scrollbar-thumb:hover {
       background-color: var(--scrollbar-thumb-hover);
+    }
+
+    header {
+      background-color: var(--title-background);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border-color);
+      position: relative;
+    }
+    header h1 {
+      margin: 10px 0;
+      color: var(--text-color);
+    }
+
+    .settings-button {
+      background-color: var(--button-background);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+    }
+    .settings-button:hover {
+      background-color: var(--button-hover-background);
+    }
+
+    .settings-panel {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background-color: var(--title-background);
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      padding: 10px;
+      display: none; /* hidden by default */
+      z-index: 999;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .settings-panel label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      cursor: pointer;
     }
 
     .container {
@@ -96,7 +167,7 @@
     }
     .title:hover, .sub-title:hover {
       background-color: var(--title-hover-background);
-      transform: scale(1.02);
+      transform: scale(1.01);
     }
 
     .list, .sub-list {
@@ -109,7 +180,7 @@
       opacity: 0;
     }
     .list.active, .sub-list.active {
-      max-height: 9999px; 
+      max-height: 9999px;
       opacity: 1;
     }
 
@@ -130,7 +201,7 @@
     .item-row {
       display: flex;
       align-items: center;
-      gap: 8px; 
+      gap: 8px;
     }
 
     /* Style clickable links that point to matching groups */
@@ -249,8 +320,24 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <!-- Header with Title & Settings -->
+  <header>
     <h1>Danbooru Group Tag Search</h1>
+    <button id="settingsButton" class="settings-button">Settings</button>
+    <!-- Settings Panel -->
+    <div id="settingsPanel" class="settings-panel">
+      <label>
+        <input type="checkbox" id="underscoreToggle" />
+        Display underscores
+      </label>
+      <label>
+        <input type="checkbox" id="lightModeToggle" />
+        Light mode
+      </label>
+    </div>
+  </header>
+
+  <div class="container">
     <div id="json-display">Loading...</div>
   </div>
 
@@ -271,15 +358,19 @@
     const HIGHLIGHT_DURATION = 2000; // Duration in ms
     const NOTIFICATION_DURATION = 2000; // Duration for notifications
 
+    // Global settings
+    let displayUnderscores = false;
+    let isLightMode = false;
+
     /***************************************************
      * Global Maps / Utilities
      ***************************************************/
     const groupMap = new Map(); // For cross-linking
-    let globalJsonData = null;  // Store the data so we can re-render if needed
+    let globalJsonData = null;  // Store the original data (filtered) for rendering
 
     /**
-     * Convert a category/item name to a standardized form
-     * for internal groupMap lookups (underscores -> spaces).
+     * Standardize name for internal lookups.
+     * - Always remove underscores for the map key, so lookups are consistent.
      */
     function standardizeName(name) {
       if (!name) return '';
@@ -287,6 +378,20 @@
         .toLowerCase()
         .replace(/_/g, ' ')
         .trim();
+    }
+
+    /**
+     * Transform a name for display, based on user setting (displayUnderscores).
+     */
+    function transformNameForDisplay(name) {
+      if (!name) return '';
+      if (displayUnderscores) {
+        // Return as-is
+        return name;
+      } else {
+        // Replace underscores with spaces
+        return name.replace(/_/g, ' ');
+      }
     }
 
     /**
@@ -303,6 +408,49 @@
     }
 
     /***************************************************
+     * Data Filtering
+     * 1) Exclude the tag "tag group"
+     * 2) Exclude groups that end up with no tags
+     ***************************************************/
+    function filterData(data) {
+      // Depending on type of data:
+      if (Array.isArray(data)) {
+        // Remove "tag group" from arrays
+        const filtered = data.filter(item => {
+          if (typeof item === 'string') {
+            return standardizeName(item) !== 'tag groups';
+          } else {
+            // If item is an object or nested array, run filterData recursively
+            return filterData(item) !== null;
+          }
+        });
+        return filtered.length > 0 ? filtered : null;
+      } else if (typeof data === 'object' && data !== null) {
+        // It's an object: filter each key
+        // If the object has sub-objects or arrays, filter them as well
+        const result = {};
+
+        for (const [key, value] of Object.entries(data)) {
+          const filteredValue = filterData(value);
+          // Keep only if filteredValue != null
+          if (filteredValue !== null) {
+            result[key] = filteredValue;
+          }
+        }
+
+        // If result is now empty, return null, meaning exclude this group
+        return Object.keys(result).length > 0 ? result : null;
+      } else {
+        // If it's a string or something else, keep it as is (unless it's "tag group")
+        if (typeof data === 'string') {
+          return standardizeName(data) === 'tag group' ? null : data;
+        }
+        // Otherwise, just return it
+        return data;
+      }
+    }
+
+    /***************************************************
      * Fetch & Entry Point
      ***************************************************/
     async function fetchAndDisplayJSON() {
@@ -311,7 +459,11 @@
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
 
-        globalJsonData = data;
+        // Filter out "tag group" & empty groups
+        const filtered = filterData(data);
+        // If everything got filtered out, fallback to empty object
+        globalJsonData = filtered || {};
+
         renderAllGroups();
       } catch (error) {
         document.getElementById('json-display').textContent = `Error fetching JSON data: ${error.message}`;
@@ -341,8 +493,8 @@
      * Recursively Render a Group (or SubGroup)
      ***************************************************/
     /**
-     * Render a collapsible group. 
-     * 
+     * Render a collapsible group.
+     *
      * @param {string} groupKey - The name/key of this group
      * @param {any} groupValue - The data (string, array, or object)
      * @param {HTMLElement} parentElement - The container in which to place the group
@@ -353,7 +505,7 @@
       // Create the clickable title
       const titleEl = document.createElement('div');
       titleEl.className = titleClass;
-      titleEl.textContent = groupKey;
+      titleEl.textContent = transformNameForDisplay(groupKey);
       parentElement.appendChild(titleEl);
 
       // Create the collapsible container
@@ -461,18 +613,19 @@
       rowDiv.classList.add('item-row');
 
       const standardized = standardizeName(text);
+      const displayText = transformNameForDisplay(text);
 
       // If this text matches a known group (even nested), make it clickable
       if (groupMap.has(standardized)) {
         const linkBtn = document.createElement('button');
-        linkBtn.textContent = text;
+        linkBtn.textContent = displayText;
         linkBtn.classList.add('group-link');
         linkBtn.onclick = () => openLinkedGroup(standardized);
         rowDiv.appendChild(linkBtn);
       } else {
         // Just plain text
         const span = document.createElement('span');
-        span.textContent = text;
+        span.textContent = displayText;
         rowDiv.appendChild(span);
       }
 
@@ -583,6 +736,40 @@
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    /***************************************************
+     * Settings Handling
+     ***************************************************/
+    const settingsButton = document.getElementById('settingsButton');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const underscoreToggle = document.getElementById('underscoreToggle');
+    const lightModeToggle = document.getElementById('lightModeToggle');
+
+    // Toggle the display of the settings panel
+    settingsButton.addEventListener('click', () => {
+      if (settingsPanel.style.display === 'none' || !settingsPanel.style.display) {
+        settingsPanel.style.display = 'block';
+      } else {
+        settingsPanel.style.display = 'none';
+      }
+    });
+
+    // When the underscore checkbox changes, update the setting and re-render
+    underscoreToggle.addEventListener('change', () => {
+      displayUnderscores = underscoreToggle.checked;
+      // Re-render everything
+      renderAllGroups();
+    });
+
+    // When the light mode checkbox changes, update the setting and apply/remove light mode
+    lightModeToggle.addEventListener('change', () => {
+      isLightMode = lightModeToggle.checked;
+      if (isLightMode) {
+        document.body.classList.add('light-mode');
+      } else {
+        document.body.classList.remove('light-mode');
+      }
+    });
 
     /***************************************************
      * Start!
