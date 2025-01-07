@@ -327,7 +327,7 @@
     <!-- Settings Panel -->
     <div id="settingsPanel" class="settings-panel">
       <label>
-        <input type="checkbox" id="underscoreToggle" />
+        <input type="checkbox" id="underscoreToggle" checked />
         Display underscores
       </label>
       <label>
@@ -359,7 +359,7 @@
     const NOTIFICATION_DURATION = 2000; // Duration for notifications
 
     // Global settings
-    let displayUnderscores = false;
+    let displayUnderscores = true;
     let isLightMode = false;
 
     /***************************************************
@@ -615,40 +615,54 @@
       const standardized = standardizeName(text);
       const displayText = transformNameForDisplay(text);
 
-      // If this text matches a known group (even nested), make it clickable
+      // If this text corresponds to another group, create a group link
       if (groupMap.has(standardized)) {
+        // It's a tag group
         const linkBtn = document.createElement('button');
         linkBtn.textContent = displayText;
         linkBtn.classList.add('group-link');
         linkBtn.onclick = () => openLinkedGroup(standardized);
         rowDiv.appendChild(linkBtn);
+
+        // No "Copy" button for groups
       } else {
-        // Just plain text
+        // It's a regular tag
         const span = document.createElement('span');
         span.textContent = displayText;
         rowDiv.appendChild(span);
+
+        // Danbooru tag search button
+        const danbooruLink = document.createElement('button');
+        danbooruLink.textContent = 'Search';
+        danbooruLink.classList.add('group-link'); // Reuse the group-link styling
+        danbooruLink.onclick = () => {
+          const query = encodeURIComponent(text); // URL encode the tag
+          const danbooruUrl = `https://danbooru.donmai.us/posts?tags=${query}`;
+          window.open(danbooruUrl, '_blank'); // Open in a new tab
+        };
+        rowDiv.appendChild(danbooruLink);
+
+        // Copy button only for regular tags
+        const copyBtn = document.createElement('button');
+        copyBtn.textContent = 'Copy';
+        copyBtn.classList.add('copy-button');
+        copyBtn.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(text);
+            copyBtn.textContent = 'Copied!';
+            copyBtn.disabled = true;
+            setTimeout(() => {
+              copyBtn.textContent = 'Copy';
+              copyBtn.disabled = false;
+            }, 1500);
+          } catch (err) {
+            console.error('Failed to copy!', err);
+            showNotification('Failed to copy text.');
+          }
+        };
+        rowDiv.appendChild(copyBtn);
       }
 
-      // Copy button
-      const copyBtn = document.createElement('button');
-      copyBtn.textContent = 'Copy';
-      copyBtn.classList.add('copy-button');
-      copyBtn.onclick = async () => {
-        try {
-          await navigator.clipboard.writeText(text);
-          copyBtn.textContent = 'Copied!';
-          copyBtn.disabled = true;
-          setTimeout(() => {
-            copyBtn.textContent = 'Copy';
-            copyBtn.disabled = false;
-          }, 1500);
-        } catch (err) {
-          console.error('Failed to copy!', err);
-          showNotification('Failed to copy text.');
-        }
-      };
-
-      rowDiv.appendChild(copyBtn);
       li.appendChild(rowDiv);
       return li;
     }
