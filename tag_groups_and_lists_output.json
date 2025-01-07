@@ -1802,9 +1802,9 @@
         ]
     },
     "Tag group:Body parts": {
-        "Tag group:Body parts": {
-            "Head": [
-                "ear_focus",
+        "Head": [
+            "ear_focus"
+                ],
                 "Tag group:Ears tags": {
                     "Animal Ears": [
                         "animal ears",
