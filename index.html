@@ -1,794 +1,681 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Danbooru Group Tag Search</title>
-  <style>
-    /* Root Variables for Dark Mode */
-    :root {
-      --background-color: #121212;
-      --text-color: #e0e0e0;
-      --title-background: #1e1e1e;
-      --title-hover-background: #333333;
-      --border-color: #333333;
-      --link-color: #bb86fc;
-      --link-hover-color: #3700b3;
-      --highlight-color: #ffeb3b; /* Bright yellow for highlight */
-      --loader-border: #3f51b5;
-      --loader-border-top: #bb86fc;
-      --button-background: #bb86fc;
-      --button-hover-background: #3700b3;
-      --notification-background: #333333;
-      --notification-text-color: #e0e0e0;
-      --notification-border-color: #555555;
-      /* Scrollbar Colors */
-      --scrollbar-track: #1e1e1e;
-      --scrollbar-thumb: #bb86fc;
-      --scrollbar-thumb-hover: #3700b3;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Danbooru Tag Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Apply the Inter font globally */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-    /* Light Mode Variables */
-    .light-mode {
-      --background-color: #ffffff;
-      --text-color: #000000;
-      --title-background: #f0f0f0;
-      --title-hover-background: #e0e0e0;
-      --border-color: #cccccc;
-      --link-color: #1a0dab;
-      --link-hover-color: #d14836;
-      --highlight-color: #ffeb3b; /* Bright yellow for highlight */
-      --loader-border: #3f51b5;
-      --loader-border-top: #1a73e8;
-      --button-background: #1a73e8;
-      --button-hover-background: #1669c1;
-      --notification-background: #f0f0f0;
-      --notification-text-color: #000000;
-      --notification-border-color: #cccccc;
-      /* Scrollbar Colors */
-      --scrollbar-track: #f0f0f0;
-      --scrollbar-thumb: #1a73e8;
-      --scrollbar-thumb-hover: #1669c1;
-    }
+        /* Smooth transition for background/color changes */
+        body, .bg-transition {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
 
-    body {
-      font-family: Arial, sans-serif;
-      background-color: var(--background-color);
-      color: var(--text-color);
-      transition: background-color 0.5s ease, color 0.5s ease;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+        /* Dark mode highlight animation for linked groups */
+         @keyframes highlight-bg-dark {
+            0% { background-color: theme('colors.yellow.600'); } /* Dark mode highlight */
+            100% { background-color: transparent; }
+        }
 
-      /* Scrollbar Styling for Firefox */
-      scrollbar-width: thin;
-      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-    }
+        /* Always use dark mode highlight animation */
+        .highlight-animation {
+            animation: highlight-bg-dark 1.5s ease-out;
+        }
 
-    /* Scrollbar Styling for WebKit Browsers */
-    body::-webkit-scrollbar {
-      width: 12px;
-    }
-    body::-webkit-scrollbar-track {
-      background: var(--scrollbar-track);
-    }
-    body::-webkit-scrollbar-thumb {
-      background-color: var(--scrollbar-thumb);
-      border-radius: 6px;
-      border: 3px solid var(--scrollbar-track);
-    }
-    body::-webkit-scrollbar-thumb:hover {
-      background-color: var(--scrollbar-thumb-hover);
-    }
+        /* Styles for smooth list expansion/collapse */
+        .list-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out 0.1s; /* Delay opacity */
+            opacity: 0;
+        }
+        .list-container.active {
+            max-height: 5000px; /* Sufficiently large max-height */
+            opacity: 1;
+            overflow: visible; /* Allow content to be visible */
+             transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out; /* Opacity transition on open */
+        }
 
-    header {
-      background-color: var(--title-background);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 20px;
-      border-bottom: 1px solid var(--border-color);
-      position: relative;
-    }
-    header h1 {
-      margin: 10px 0;
-      color: var(--text-color);
-    }
+        /* Dark mode loader styles (now the default) */
+        .loader {
+             border: 4px solid theme('colors.gray.600'); /* Dark mode border */
+             border-top: 4px solid theme('colors.indigo.400'); /* Dark mode spinner */
+             border-radius: 50%;
+             width: 24px;
+             height: 24px;
+             animation: spin 1s linear infinite;
+        }
 
-    .settings-button {
-      background-color: var(--button-background);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: background-color 0.3s ease;
-    }
-    .settings-button:hover {
-      background-color: var(--button-hover-background);
-    }
+        /* Spin animation for loader */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
-    .settings-panel {
-      position: absolute;
-      top: 60px;
-      right: 20px;
-      background-color: var(--title-background);
-      border: 1px solid var(--border-color);
-      border-radius: 5px;
-      padding: 10px;
-      display: none; /* hidden by default */
-      z-index: 999;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-    .settings-panel label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 10px;
-      cursor: pointer;
-    }
-
-    .container {
-      margin: 20px;
-      animation: fadeIn 1s ease-in-out;
-      flex: 1;
-    }
-
-    .category, .sub-category {
-      margin: 10px 0;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: slideUp 0.5s forwards;
-      transition: transform 0.3s ease; /* Transition for scaling */
-    }
-    /* Stagger animation for categories */
-    .category:nth-child(1) { animation-delay: 0.1s; }
-    .category:nth-child(2) { animation-delay: 0.2s; }
-    .category:nth-child(3) { animation-delay: 0.3s; }
-
-    .category:hover, .sub-category:hover {
-      transform: translateY(20px) scale(1.02);
-      z-index: 1;
-    }
-
-    .title, .sub-title {
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 5px;
-      background-color: var(--title-background);
-      padding: 10px;
-      border: 1px solid var(--border-color);
-      border-radius: 5px;
-      transition: background-color 0.3s, transform 0.3s;
-      position: relative;
-    }
-    .title:hover, .sub-title:hover {
-      background-color: var(--title-hover-background);
-      transform: scale(1.01);
-    }
-
-    .list, .sub-list {
-      max-height: 0;
-      overflow: hidden;
-      margin-left: 20px;
-      padding-left: 10px;
-      border-left: 2px solid var(--border-color);
-      transition: max-height 0.5s ease, opacity 0.5s ease;
-      opacity: 0;
-    }
-    .list.active, .sub-list.active {
-      max-height: 9999px;
-      opacity: 1;
-    }
-
-    .list-content, .sub-list-content {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-    }
-    ul {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-    }
-    li {
-      margin: 5px 0;
-    }
-    /* Flexible row for text + copy button */
-    .item-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* Style clickable links that point to matching groups */
-    .group-link {
-      color: var(--link-color);
-      cursor: pointer;
-      text-decoration: underline;
-      background: none;
-      border: none;
-      padding: 0;
-      font: inherit;
-    }
-    .group-link:hover, .group-link:focus {
-      color: var(--link-hover-color);
-      outline: none;
-      text-decoration: none;
-    }
-
-    /* Copy button styles */
-    .copy-button {
-      background-color: var(--button-background);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 2px 6px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: background-color 0.3s ease;
-    }
-    .copy-button:hover {
-      background-color: var(--button-hover-background);
-    }
-
-    /* Highlight effect for title */
-    .highlight {
-      background-color: var(--highlight-color);
-      animation: highlightFade 2s forwards;
-    }
-    @keyframes highlightFade {
-      0% { background-color: var(--highlight-color); }
-      100% { background-color: var(--title-background); }
-    }
-
-    /* Fade-in animation for container */
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    /* Slide-up animation for categories */
-    @keyframes slideUp {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Loader styles */
-    .loader {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid var(--loader-border-top);
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      animation: spin 1s linear infinite;
-      display: inline-block;
-      margin-left: 10px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* "Load More" button (for large arrays) */
-    .load-more {
-      display: block;
-      margin: 10px 0;
-      padding: 8px 12px;
-      background-color: var(--button-background);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      text-align: center;
-      transition: background-color 0.3s ease;
-    }
-    .load-more:hover {
-      background-color: var(--button-hover-background);
-    }
-
-    /* Footer Styles */
-    footer {
-      text-align: center;
-      padding: 10px 0;
-      background-color: var(--title-background);
-      color: var(--text-color);
-      border-top: 1px solid var(--border-color);
-    }
-
-    /* Notification Styles */
-    .notification {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: var(--notification-background);
-      color: var(--notification-text-color);
-      padding: 10px 20px;
-      border: 1px solid var(--notification-border-color);
-      border-radius: 5px;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      z-index: 1000;
-    }
-    .notification.show {
-      opacity: 1;
-    }
-  </style>
+        /* Basic scrollbar styling (using dark mode styles as default) */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+             background: theme('colors.gray.800'); /* Dark track */
+        }
+        ::-webkit-scrollbar-thumb {
+             background-color: theme('colors.indigo.500'); /* Dark thumb */
+             border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: theme('colors.indigo.600'); /* Dark thumb hover */
+        }
+        /* Add transition to list items for smooth hover and click feedback */
+        li {
+            transition: background-color 0.2s ease-in-out;
+        }
+        /* Style for indicating successful copy */
+        .copied-success {
+            background-color: theme('colors.emerald.700') !important; /* Use !important to override hover */
+            transition: background-color 0.1s ease-in-out;
+        }
+    </style>
 </head>
-<body>
-  <!-- Header with Title & Settings -->
-  <header>
-    <h1>Danbooru Group Tag Search</h1>
-    <button id="settingsButton" class="settings-button">Settings</button>
-    <!-- Settings Panel -->
-    <div id="settingsPanel" class="settings-panel">
-      <label>
-        <input type="checkbox" id="underscoreToggle" checked />
-        Display underscores
-      </label>
-      <label>
-        <input type="checkbox" id="lightModeToggle" />
-        Light mode
-      </label>
-    </div>
-  </header>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col bg-transition">
 
-  <div class="container">
-    <div id="json-display">Loading...</div>
-  </div>
+    <header class="bg-gray-800 shadow-md sticky top-0 z-50 bg-transition">
+        <div class="container mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-semibold text-gray-200">Danbooru Tag Search</h1>
+            <button id="settingsButton" aria-label="Open Settings" aria-haspopup="true" aria-expanded="false" class="p-2 rounded-md text-gray-400 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-800">
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/settings.svg" alt="Settings" class="w-5 h-5"/>
+            </button>
+        </div>
+        <div id="settingsPanel" class="absolute right-4 md:right-6 mt-1 w-56 rounded-md shadow-lg bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-50" role="menu" aria-orientation="vertical" aria-labelledby="settingsButton" tabindex="-1">
+            <div class="py-1" role="none">
+                <label for="underscoreToggle" class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer" role="menuitem" tabindex="-1">
+                    <input type="checkbox" id="underscoreToggle" class="mr-2 h-4 w-4 rounded border-gray-500 text-indigo-600 focus:ring-indigo-500 bg-gray-600 checked:bg-indigo-500">
+                    Display Underscores
+                </label>
+                 <div class="border-t border-gray-600 my-1"></div>
+                 <button id="foldAllButton" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-gray-200 hover:bg-gray-600" role="menuitem" tabindex="-1">
+                     <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevrons-up.svg" alt="" class="w-4 h-4 inline-block"/>
+                     Fold All (Shift+F)
+                 </button>
+            </div>
+        </div>
+    </header>
 
-  <!-- Footer -->
-  <footer>
-    Made by A13JM
-  </footer>
+    <main class="container mx-auto p-4 md:p-6 flex-grow">
+        <div id="json-display" class="space-y-3">
+            <div id="initial-loader" class="flex items-center justify-center h-40 pt-10">
+                 <div class="loader"></div>
+                 <span class="ml-3 text-gray-400">Loading tags...</span>
+            </div>
+            </div>
+    </main>
 
-  <!-- Notification Element -->
-  <div id="notification" class="notification"></div>
+    <footer class="bg-gray-800 text-center p-4 text-sm text-gray-400 mt-8 bg-transition">
+        Made by A13JM (Modernized using Tailwind &amp; JS best practices)
+    </footer>
 
-  <script>
-    /***************************************************
-     * Configuration
-     ***************************************************/
-    const jsonUrl = 'https://raw.githubusercontent.com/A13JM/MakingImagesGreatAgain_Library/refs/heads/main/tag_groups_and_lists_output.json';
-    const CHUNK_SIZE = 50; // Number of items to load per chunk
-    const HIGHLIGHT_DURATION = 2000; // Duration in ms
-    const NOTIFICATION_DURATION = 2000; // Duration for notifications
+    <div id="notification" class="fixed bottom-5 right-5 bg-gray-200 text-gray-900 px-4 py-2 rounded-md shadow-lg opacity-0 transform translate-y-2 transition-all duration-300 ease-in-out z-[100]">
+        </div>
 
-    // Global settings
-    let displayUnderscores = true;
-    let isLightMode = false;
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            /***************************************************
+             * Configuration & State
+             ***************************************************/
+            const jsonUrl = 'https://raw.githubusercontent.com/A13JM/MakingImagesGreatAgain_Library/refs/heads/main/tag_groups_and_lists_output.json';
+            const CHUNK_SIZE = 50; // Items per chunk for large lists
+            const HIGHLIGHT_DURATION = 1500; // Highlight duration in ms
+            const NOTIFICATION_DURATION = 2500; // Notification duration in ms
+            const COPY_FEEDBACK_DURATION = 500; // How long the green background stays after copy
 
-    /***************************************************
-     * Global Maps / Utilities
-     ***************************************************/
-    const groupMap = new Map(); // For cross-linking
-    let globalJsonData = null;  // Store the original data (filtered) for rendering
+            // DOM Elements
+            const displayContainer = document.getElementById('json-display');
+            const initialLoader = document.getElementById('initial-loader');
+            const settingsButton = document.getElementById('settingsButton');
+            const settingsPanel = document.getElementById('settingsPanel');
+            const underscoreToggle = document.getElementById('underscoreToggle');
+            const foldAllButton = document.getElementById('foldAllButton');
+            const notificationElement = document.getElementById('notification');
 
-    /**
-     * Standardize name for internal lookups.
-     * - Always remove underscores for the map key, so lookups are consistent.
-     */
-    function standardizeName(name) {
-      if (!name) return '';
-      return name
-        .toLowerCase()
-        .replace(/_/g, ' ')
-        .trim();
-    }
+            // Global State
+            let displayUnderscores = true; // Default setting
+            const groupMap = new Map(); // Map standardized group names to their elements/data
+            let globalJsonData = null; // Stores the fetched and filtered JSON data
+            let notificationTimeout = null; // Timeout ID for notification dismissal
 
-    /**
-     * Transform a name for display, based on user setting (displayUnderscores).
-     */
-    function transformNameForDisplay(name) {
-      if (!name) return '';
-      if (displayUnderscores) {
-        // Return as-is
-        return name;
-      } else {
-        // Replace underscores with spaces
-        return name.replace(/_/g, ' ');
-      }
-    }
+            /***************************************************
+             * Utility Functions
+             ***************************************************/
 
-    /**
-     * Show a temporary notification to the user.
-     */
-    function showNotification(message) {
-      const notification = document.getElementById('notification');
-      notification.textContent = message;
-      notification.classList.add('show');
+            /**
+             * Standardizes a name for internal lookups (lowercase, spaces instead of underscores).
+             * @param {string} name - The name to standardize.
+             * @returns {string} The standardized name.
+             */
+            const standardizeName = (name) => name ? name.toLowerCase().replace(/_/g, ' ').trim() : '';
 
-      setTimeout(() => {
-        notification.classList.remove('show');
-      }, NOTIFICATION_DURATION);
-    }
+            /**
+             * Transforms a name for display based on the 'displayUnderscores' setting.
+             * @param {string} name - The name to transform.
+             * @returns {string} The name formatted for display.
+             */
+            const transformNameForDisplay = (name) => {
+                if (!name) return '';
+                return displayUnderscores ? name : name.replace(/_/g, ' ');
+            };
 
-    /***************************************************
-     * Data Filtering
-     * 1) Exclude the tag "tag group"
-     * 2) Exclude groups that end up with no tags
-     ***************************************************/
-    function filterData(data) {
-      // Depending on type of data:
-      if (Array.isArray(data)) {
-        // Remove "tag group" from arrays
-        const filtered = data.filter(item => {
-          if (typeof item === 'string') {
-            return standardizeName(item) !== 'tag groups';
-          } else {
-            // If item is an object or nested array, run filterData recursively
-            return filterData(item) !== null;
-          }
-        });
-        return filtered.length > 0 ? filtered : null;
-      } else if (typeof data === 'object' && data !== null) {
-        // It's an object: filter each key
-        // If the object has sub-objects or arrays, filter them as well
-        const result = {};
+            /**
+             * Shows a temporary notification message.
+             * @param {string} message - The message to display.
+             * @param {string} type - 'success' (default) or 'error'.
+             */
+            const showNotification = (message, type = 'success') => {
+                clearTimeout(notificationTimeout); // Clear any existing timeout
+                notificationElement.textContent = message;
+                notificationElement.classList.remove('opacity-0', 'translate-y-2');
+                notificationElement.classList.add('opacity-100', 'translate-y-0');
 
-        for (const [key, value] of Object.entries(data)) {
-          const filteredValue = filterData(value);
-          // Keep only if filteredValue != null
-          if (filteredValue !== null) {
-            result[key] = filteredValue;
-          }
-        }
+                notificationTimeout = setTimeout(() => {
+                    notificationElement.classList.remove('opacity-100', 'translate-y-0');
+                    notificationElement.classList.add('opacity-0', 'translate-y-2');
+                }, NOTIFICATION_DURATION);
+            };
 
-        // If result is now empty, return null, meaning exclude this group
-        return Object.keys(result).length > 0 ? result : null;
-      } else {
-        // If it's a string or something else, keep it as is (unless it's "tag group")
-        if (typeof data === 'string') {
-          return standardizeName(data) === 'tag group' ? null : data;
-        }
-        // Otherwise, just return it
-        return data;
-      }
-    }
+            /**
+             * Toggles the visibility of the settings panel.
+             */
+            const toggleSettingsPanel = () => {
+                const isHidden = settingsPanel.classList.contains('hidden');
+                settingsPanel.classList.toggle('hidden');
+                settingsButton.setAttribute('aria-expanded', !isHidden);
+                if (!isHidden) {
+                    settingsPanel.focus(); // Focus the panel when opened
+                }
+            };
 
-    /***************************************************
-     * Fetch & Entry Point
-     ***************************************************/
-    async function fetchAndDisplayJSON() {
-      try {
-        const response = await fetch(jsonUrl);
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        const data = await response.json();
+             /**
+             * Applies the dark mode setting to the HTML element.
+             * Simplified as dark mode is always on.
+             */
+            const applyDarkMode = () => {
+                if (!document.documentElement.classList.contains('dark')) {
+                     document.documentElement.classList.add('dark');
+                }
+            };
 
-        // Filter out "tag group" & empty groups
-        const filtered = filterData(data);
-        // If everything got filtered out, fallback to empty object
-        globalJsonData = filtered || {};
+            /**
+             * Loads settings from localStorage or uses defaults.
+             * Only handles underscore setting now.
+             */
+            const loadSettings = () => {
+                const savedUnderscores = localStorage.getItem('displayUnderscores');
+                displayUnderscores = savedUnderscores === null ? true : (savedUnderscores === 'true');
+                underscoreToggle.checked = displayUnderscores;
+                applyDarkMode(); // Ensure dark mode class is set
+                localStorage.setItem('displayUnderscores', displayUnderscores);
+            };
 
-        renderAllGroups();
-      } catch (error) {
-        document.getElementById('json-display').textContent = `Error fetching JSON data: ${error.message}`;
-      }
-    }
 
-    // Renders all top-level groups
-    function renderAllGroups() {
-      // Clear existing
-      const display = document.getElementById('json-display');
-      display.innerHTML = '';
-      groupMap.clear();
+            /***************************************************
+             * Data Fetching and Filtering
+             ***************************************************/
 
-      // For each top-level key in JSON, create a collapsible group
-      for (const [key, value] of Object.entries(globalJsonData)) {
-        // Render as a "top-level" category
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'category';
-        display.appendChild(categoryDiv);
+            /**
+             * Fetches JSON data from the specified URL.
+             * @returns {Promise<object>} A promise that resolves with the JSON data.
+             */
+            const fetchJsonData = async () => {
+                try {
+                    const response = await fetch(jsonUrl);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching JSON data:', error);
+                    showNotification(`Error loading tags: ${error.message}`, 'error');
+                    if (initialLoader) { // Check if loader exists before modifying
+                        initialLoader.textContent = 'Failed to load tag data. Please check the console and try again later.';
+                        initialLoader.classList.add('text-red-400');
+                    }
+                    throw error;
+                }
+            };
 
-        // This handles creation of the title, collapsible list, etc.
-        renderGroup(key, value, categoryDiv, 'title', 'list');
-      }
-    }
+            /**
+             * Recursively filters the data.
+             * @param {*} data - The data to filter.
+             * @returns {*} The filtered data, or null if empty.
+             */
+            const filterData = (data) => {
+                const tagGroupStr = 'tag groups';
 
-    /***************************************************
-     * Recursively Render a Group (or SubGroup)
-     ***************************************************/
-    /**
-     * Render a collapsible group.
-     *
-     * @param {string} groupKey - The name/key of this group
-     * @param {any} groupValue - The data (string, array, or object)
-     * @param {HTMLElement} parentElement - The container in which to place the group
-     * @param {string} titleClass - CSS class to use for the clickable title
-     * @param {string} listClass - CSS class for the collapsible list container
-     */
-    function renderGroup(groupKey, groupValue, parentElement, titleClass, listClass) {
-      // Create the clickable title
-      const titleEl = document.createElement('div');
-      titleEl.className = titleClass;
-      titleEl.textContent = transformNameForDisplay(groupKey);
-      parentElement.appendChild(titleEl);
+                if (Array.isArray(data)) {
+                    const filteredArray = data
+                        .map(item => filterData(item))
+                        .filter(item => item !== null && standardizeName(String(item)) !== tagGroupStr);
+                    return filteredArray.length > 0 ? filteredArray : null;
+                } else if (typeof data === 'object' && data !== null) {
+                    const filteredObject = {};
+                    for (const [key, value] of Object.entries(data)) {
+                         if (standardizeName(key) === tagGroupStr) continue;
+                        const filteredValue = filterData(value);
+                        if (filteredValue !== null) {
+                            filteredObject[key] = filteredValue;
+                        }
+                    }
+                    return Object.keys(filteredObject).length > 0 ? filteredObject : null;
+                } else if (typeof data === 'string') {
+                    return standardizeName(data) === tagGroupStr ? null : data;
+                }
+                return data;
+            };
 
-      // Create the collapsible container
-      const listEl = document.createElement('div');
-      listEl.className = listClass;
-      parentElement.appendChild(listEl);
 
-      // Keep track in groupMap for cross-linking
-      const stdKey = standardizeName(groupKey);
-      groupMap.set(stdKey, {
-        titleElement: titleEl,
-        listDiv: listEl,
-        value: groupValue
-      });
+            /***************************************************
+             * Rendering Functions
+             ***************************************************/
 
-      // On click => expand/collapse
-      titleEl.onclick = () => {
-        if (!listEl.classList.contains('active')) {
-          listEl.classList.add('active');
-          // Lazy render if needed
-          if (!listEl.dataset.loaded) {
-            renderGroupContent(groupKey, groupValue, listEl, true);
-            listEl.dataset.loaded = true;
-          }
-        } else {
-          listEl.classList.remove('active');
-        }
-      };
-    }
+            /**
+             * Renders all top-level groups from the globalJsonData.
+             */
+            const renderAllGroups = () => {
+                displayContainer.innerHTML = '';
+                groupMap.clear();
 
-    /**
-     * Render the content inside a group’s collapsible container.
-     * - If it's an object, create subgroups for each key.
-     * - If it's an array, render the items (with chunked loading).
-     * - If it's a string, render a single item.
-     *
-     * **Modification:** Skip rendering subgroups named "List_Tags" and directly display their tags.
-     *
-     * @param {string} groupKey - The name/key of the current group
-     * @param {any} value - The data to render
-     * @param {HTMLElement} container - Where to render
-     * @param {boolean} isTopLevel - If true, use sub-titles for objects
-     */
-    function renderGroupContent(groupKey, value, container, isTopLevel) {
-      // Show a loader while rendering
-      container.innerHTML = '<div class="loader"></div> Loading...';
+                if (!globalJsonData || Object.keys(globalJsonData).length === 0) {
+                    displayContainer.innerHTML = '<p class="text-gray-400 text-center py-5">No tag groups found.</p>';
+                    return;
+                }
 
-      setTimeout(() => {
-        container.innerHTML = ''; // remove loader
+                const fragment = document.createDocumentFragment();
+                for (const [key, value] of Object.entries(globalJsonData)) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'bg-gray-800 rounded-lg border border-gray-700 shadow-sm overflow-hidden bg-transition';
+                    renderGroup(key, value, categoryDiv, true);
+                    fragment.appendChild(categoryDiv);
+                }
+                 displayContainer.appendChild(fragment);
+            };
 
-        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          // It's an object => For each [subKey, subValue], create a sub-group
-          for (const [subKey, subValue] of Object.entries(value)) {
-            if (subKey === 'List_Tags') {
-              // **Skip the "List_Tags" group and directly render its tags**
-              renderListItems(subValue, container);
-            } else {
-              // sub-category container
-              const subDiv = document.createElement('div');
-              subDiv.className = 'sub-category';
-              container.appendChild(subDiv);
+            /**
+             * Renders a collapsible group (or subgroup).
+             * @param {string} groupKey - The name/key of this group.
+             * @param {*} groupValue - The data for this group.
+             * @param {HTMLElement} parentElement - The container element.
+             * @param {boolean} isTopLevel - If this is a top-level group.
+             */
+            const renderGroup = (groupKey, groupValue, parentElement, isTopLevel) => {
+                const groupId = `group-${standardizeName(groupKey).replace(/\s+/g, '-')}`;
+                const listId = `${groupId}-list`;
 
-              // Create a nested subgroup
-              renderGroup(subKey, subValue, subDiv, 'sub-title', 'sub-list');
-            }
-          }
-        } else if (Array.isArray(value)) {
-          // It's an array => render either chunked or all at once
-          renderListItems(value, container);
-        } else if (typeof value === 'string') {
-          // Single string
-          renderListItems([value], container);
-        }
-      }, 300); // small delay for demonstration
-    }
+                const titleButton = document.createElement('button');
+                titleButton.className = `w-full flex justify-between items-center p-3 text-left font-medium ${isTopLevel ? 'text-lg' : 'text-base'} hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 rounded-t-lg bg-transition`;
+                titleButton.setAttribute('aria-expanded', 'false');
+                titleButton.setAttribute('aria-controls', listId);
+                titleButton.id = groupId;
 
-    /**
-     * Render list items directly (used when skipping "List_Tags")
-     *
-     * @param {Array|string} items - The items to render
-     * @param {HTMLElement} container - Where to render
-     */
-    function renderListItems(items, container) {
-      // Ensure items is an array
-      const itemArray = Array.isArray(items) ? items : [items];
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent = transformNameForDisplay(groupKey);
+                titleButton.appendChild(titleSpan);
 
-      if (itemArray.length > CHUNK_SIZE) {
-        renderVirtualList(itemArray, container);
-      } else {
-        const ul = document.createElement('ul');
-        itemArray.forEach(item => {
-          const li = createListItem(item);
-          ul.appendChild(li);
-        });
-        container.appendChild(ul);
-      }
-    }
+                const chevronIcon = document.createElement('img');
+                chevronIcon.src = "https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevron-down.svg";
+                chevronIcon.alt = "Expand/Collapse";
+                chevronIcon.className = "w-5 h-5 transform transition-transform duration-300";
+                titleButton.appendChild(chevronIcon);
 
-    /***************************************************
-     * Create a List Item
-     ***************************************************/
-    function createListItem(text) {
-      const li = document.createElement('li');
-      const rowDiv = document.createElement('div');
-      rowDiv.classList.add('item-row');
+                const listContainer = document.createElement('div');
+                listContainer.className = 'list-container border-t border-gray-700 bg-gray-800 bg-transition';
+                listContainer.id = listId;
+                listContainer.setAttribute('role', 'region');
+                listContainer.setAttribute('aria-labelledby', groupId);
 
-      const standardized = standardizeName(text);
-      const displayText = transformNameForDisplay(text);
+                parentElement.appendChild(titleButton);
+                parentElement.appendChild(listContainer);
 
-      // If this text corresponds to another group, create a group link
-      if (groupMap.has(standardized)) {
-        // It's a tag group
-        const linkBtn = document.createElement('button');
-        linkBtn.textContent = displayText;
-        linkBtn.classList.add('group-link');
-        linkBtn.onclick = () => openLinkedGroup(standardized);
-        rowDiv.appendChild(linkBtn);
+                const stdKey = standardizeName(groupKey);
+                groupMap.set(stdKey, {
+                    titleElement: titleButton,
+                    listDiv: listContainer,
+                    value: groupValue,
+                    chevron: chevronIcon,
+                    isRendered: false
+                });
 
-        // No "Copy" button for groups
-      } else {
-        // It's a regular tag
-        const span = document.createElement('span');
-        span.textContent = displayText;
-        rowDiv.appendChild(span);
+                titleButton.addEventListener('click', () => {
+                    const isExpanded = listContainer.classList.contains('active');
+                    if (!isExpanded) {
+                        listContainer.classList.add('active');
+                        titleButton.setAttribute('aria-expanded', 'true');
+                        chevronIcon.style.transform = 'rotate(180deg)';
+                        const groupInfo = groupMap.get(stdKey);
+                        if (groupInfo && !groupInfo.isRendered) {
+                            renderGroupContent(groupKey, groupValue, listContainer);
+                            groupInfo.isRendered = true;
+                        }
+                    } else {
+                        listContainer.classList.remove('active');
+                        titleButton.setAttribute('aria-expanded', 'false');
+                         chevronIcon.style.transform = 'rotate(0deg)';
+                    }
+                });
+            };
 
-        // Danbooru tag search button
-        const danbooruLink = document.createElement('button');
-        danbooruLink.textContent = 'Search';
-        danbooruLink.classList.add('group-link'); // Reuse the group-link styling
-        danbooruLink.onclick = () => {
-          const query = encodeURIComponent(text); // URL encode the tag
-          const danbooruUrl = `https://danbooru.donmai.us/posts?tags=${query}`;
-          window.open(danbooruUrl, '_blank'); // Open in a new tab
-        };
-        rowDiv.appendChild(danbooruLink);
+            /**
+             * Renders the content *inside* a group's collapsible container.
+             * @param {string} groupKey - The parent group's key.
+             * @param {*} value - The data to render.
+             * @param {HTMLElement} container - The container element.
+             */
+            const renderGroupContent = (groupKey, value, container) => {
+                container.innerHTML = `
+                    <div class="flex items-center justify-center p-4">
+                        <div class="loader !w-5 !h-5"></div>
+                        <span class="ml-2 text-sm text-gray-400">Loading...</span>
+                    </div>`;
 
-        // Copy button only for regular tags
-        const copyBtn = document.createElement('button');
-        copyBtn.textContent = 'Copy';
-        copyBtn.classList.add('copy-button');
-        copyBtn.onclick = async () => {
-          try {
-            await navigator.clipboard.writeText(text);
-            copyBtn.textContent = 'Copied!';
-            copyBtn.disabled = true;
-            setTimeout(() => {
-              copyBtn.textContent = 'Copy';
-              copyBtn.disabled = false;
-            }, 1500);
-          } catch (err) {
-            console.error('Failed to copy!', err);
-            showNotification('Failed to copy text.');
-          }
-        };
-        rowDiv.appendChild(copyBtn);
-      }
+                setTimeout(() => {
+                    container.innerHTML = ''; // Clear loader
 
-      li.appendChild(rowDiv);
-      return li;
-    }
+                    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                        const subFragment = document.createDocumentFragment();
+                        let hasContent = false;
+                        for (const [subKey, subValue] of Object.entries(value)) {
+                             if (subKey.toLowerCase() === 'list_tags' && Array.isArray(subValue)) {
+                                renderListItems(subValue, container);
+                                hasContent = true;
+                            } else {
+                                const subDiv = document.createElement('div');
+                                subDiv.className = 'my-2 mx-3 p-2 border border-gray-700 rounded-md bg-gray-700/50';
+                                renderGroup(subKey, subValue, subDiv, false);
+                                subFragment.appendChild(subDiv);
+                                hasContent = true;
+                            }
+                        }
+                        if (subFragment.childNodes.length > 0) {
+                             container.appendChild(subFragment);
+                        } else if (!hasContent) {
+                             container.innerHTML = '<p class="p-3 text-sm text-gray-500">No items in this group.</p>';
+                        }
+                    } else if (Array.isArray(value) || typeof value === 'string') {
+                        renderListItems(Array.isArray(value) ? value : [value], container);
+                    } else {
+                         container.innerHTML = '<p class="p-3 text-sm text-gray-500">No items in this group.</p>';
+                    }
+                }, 50);
+            };
 
-    /***************************************************
-     * Cross-Linking / Highlighting
-     ***************************************************/
-    function openLinkedGroup(stdName) {
-      const groupInfo = groupMap.get(stdName);
-      if (!groupInfo) return;
+             /**
+             * Renders list items within a container, using chunking if necessary.
+             * @param {Array<string>} items - Array of strings (tags or group names).
+             * @param {HTMLElement} container - The parent element.
+             */
+            const renderListItems = (items, container) => {
+                 if (!items || items.length === 0) {
+                     container.innerHTML = '<p class="p-3 text-sm text-gray-500">No items.</p>';
+                     return;
+                 }
 
-      // Expand if not already
-      if (!groupInfo.listDiv.classList.contains('active')) {
-        groupInfo.listDiv.classList.add('active');
-        if (!groupInfo.listDiv.dataset.loaded) {
-          renderGroupContent(groupInfo.titleElement.textContent, groupInfo.value, groupInfo.listDiv, false);
-          groupInfo.listDiv.dataset.loaded = true;
-        }
-      }
+                const listElement = document.createElement('ul');
+                // Added negative margin to counteract padding on LIs for hover effect
+                listElement.className = 'space-y-1 p-2 -m-px'; // Adjust padding/margin
+                container.appendChild(listElement);
 
-      // Scroll to it
-      groupInfo.titleElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (items.length > CHUNK_SIZE) {
+                    renderChunkedList(items, listElement, container);
+                } else {
+                    const fragment = document.createDocumentFragment();
+                    items.forEach(item => fragment.appendChild(createListItem(item)));
+                    listElement.appendChild(fragment);
+                }
+            };
 
-      // Flash highlight
-      groupInfo.titleElement.classList.remove('highlight');
-      void groupInfo.titleElement.offsetWidth; // reflow
-      groupInfo.titleElement.classList.add('highlight');
 
-      setTimeout(() => {
-        groupInfo.titleElement.classList.remove('highlight');
-      }, HIGHLIGHT_DURATION);
-    }
+            /**
+             * Creates a single list item element (tag or group link).
+             * @param {string} text - The text content of the item (original format with underscores).
+             * @returns {HTMLElement} The created list item (<li>) element.
+             */
+            const createListItem = (text) => {
+                const li = document.createElement('li');
+                const standardized = standardizeName(text);
+                const displayText = transformNameForDisplay(text);
 
-    /***************************************************
-     * Chunked (Virtual) Rendering for Large Arrays
-     ***************************************************/
-    function renderVirtualList(items, container) {
-      const ul = document.createElement('ul');
-      container.appendChild(ul);
+                if (groupMap.has(standardized)) {
+                    // --- Group Link ---
+                    li.className = 'flex items-center gap-2 px-2 py-1 rounded-md'; // Consistent padding
+                    const linkButton = document.createElement('button');
+                    linkButton.textContent = displayText;
+                    linkButton.className = 'text-indigo-400 hover:underline focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded px-1 py-0.5';
+                    linkButton.onclick = (e) => {
+                         e.stopPropagation();
+                         openLinkedGroup(standardized);
+                    };
+                    const linkIcon = document.createElement('img');
+                    linkIcon.src = "https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/link-2.svg";
+                    linkIcon.alt = "Link to group";
+                    linkIcon.className = "w-4 h-4 inline-block ml-1 text-indigo-400";
 
-      let start = 0;
-      let end = CHUNK_SIZE;
-      const total = items.length;
+                    li.appendChild(linkButton);
+                    li.appendChild(linkIcon);
 
-      function renderChunk() {
-        const fragment = document.createDocumentFragment();
-        for (let i = start; i < end && i < total; i++) {
-          const li = createListItem(items[i]);
-          fragment.appendChild(li);
-        }
-        ul.appendChild(fragment);
+                } else {
+                    // --- Regular Tag (Click to Copy) ---
+                    li.className = 'flex items-center justify-between gap-2 group px-2 py-1 rounded-md hover:bg-gray-700 cursor-pointer'; // Added cursor-pointer
+                    li.title = `Click to copy "${text}"`; // Add tooltip
 
-        start = end;
-        end += CHUNK_SIZE;
+                    const tagSpan = document.createElement('span');
+                    tagSpan.textContent = displayText;
+                    tagSpan.className = 'flex-grow truncate select-none'; // Prevent text selection during click
+                    li.appendChild(tagSpan);
 
-        // Show/hide the Load More button
-        loadMoreBtn.style.display = (start < total) ? 'block' : 'none';
-      }
+                    // Click listener for the entire list item to copy
+                    li.onclick = async (e) => {
+                        // Prevent click from propagating if search button is clicked
+                        if (e.target.closest('button')) {
+                            return;
+                        }
+                        try {
+                            await navigator.clipboard.writeText(text); // Copy original text
+                            showNotification(`Copied: ${displayText}`);
+                            // Visual feedback: temporary background change
+                            li.classList.add('copied-success');
+                            setTimeout(() => {
+                                li.classList.remove('copied-success');
+                            }, COPY_FEEDBACK_DURATION);
+                        } catch (err) {
+                            console.error('Failed to copy:', err);
+                            showNotification('Failed to copy tag.', 'error');
+                        }
+                    };
 
-      // Initial chunk
-      renderChunk();
+                    // Container for the search button (copy button removed)
+                    const buttonGroup = document.createElement('div');
+                    // Make search button visible on list item hover (group-hover)
+                    buttonGroup.className = 'flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200';
 
-      const loadMoreBtn = document.createElement('button');
-      loadMoreBtn.textContent = 'Load More';
-      loadMoreBtn.className = 'load-more';
-      loadMoreBtn.onclick = () => renderChunk();
-      container.appendChild(loadMoreBtn);
-    }
+                    // Danbooru Search Button (remains)
+                    const searchButton = document.createElement('button');
+                    searchButton.className = 'p-1 rounded text-gray-400 hover:bg-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-500';
+                    searchButton.title = `Search "${text}" on Danbooru`;
+                    searchButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/search.svg" alt="Search" class="w-4 h-4"/>`;
+                    searchButton.onclick = (e) => {
+                        e.stopPropagation(); // Prevent li click handler when search is clicked
+                        const query = encodeURIComponent(text);
+                        window.open(`https://danbooru.donmai.us/posts?tags=${query}`, '_blank', 'noopener,noreferrer');
+                    };
+                    buttonGroup.appendChild(searchButton);
 
-    /***************************************************
-     * Keyboard Shortcut: Shift + F => Fold All
-     ***************************************************/
-    document.addEventListener('keydown', (event) => {
-      if (event.shiftKey && event.key.toLowerCase() === 'f') {
-        foldAllGroups();
-        showNotification('All groups have been folded.');
-      }
-    });
+                    // Removed Copy Button element and its logic
 
-    function foldAllGroups() {
-      groupMap.forEach(groupInfo => {
-        if (groupInfo.listDiv.classList.contains('active')) {
-          groupInfo.listDiv.classList.remove('active');
-        }
-      });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+                    li.appendChild(buttonGroup); // Add button group (containing only search now)
+                }
 
-    /***************************************************
-     * Settings Handling
-     ***************************************************/
-    const settingsButton = document.getElementById('settingsButton');
-    const settingsPanel = document.getElementById('settingsPanel');
-    const underscoreToggle = document.getElementById('underscoreToggle');
-    const lightModeToggle = document.getElementById('lightModeToggle');
+                return li;
+            };
 
-    // Toggle the display of the settings panel
-    settingsButton.addEventListener('click', () => {
-      if (settingsPanel.style.display === 'none' || !settingsPanel.style.display) {
-        settingsPanel.style.display = 'block';
-      } else {
-        settingsPanel.style.display = 'none';
-      }
-    });
+            /**
+             * Handles rendering large lists in chunks with a "Load More" button.
+             * @param {Array<string>} items - The full list of items.
+             * @param {HTMLElement} listElement - The <ul> element.
+             * @param {HTMLElement} container - The parent container.
+             */
+            const renderChunkedList = (items, listElement, container) => {
+                let currentIndex = 0;
 
-    // When the underscore checkbox changes, update the setting and re-render
-    underscoreToggle.addEventListener('change', () => {
-      displayUnderscores = underscoreToggle.checked;
-      // Re-render everything
-      renderAllGroups();
-    });
+                const loadMoreButton = document.createElement('button');
+                loadMoreButton.className = 'mt-3 w-full text-center px-4 py-2 text-sm font-medium rounded-md text-indigo-300 bg-indigo-900/50 hover:bg-indigo-800/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-800';
+                loadMoreButton.textContent = `Load More (${items.length - CHUNK_SIZE} remaining)`;
 
-    // When the light mode checkbox changes, update the setting and apply/remove light mode
-    lightModeToggle.addEventListener('change', () => {
-      isLightMode = lightModeToggle.checked;
-      if (isLightMode) {
-        document.body.classList.add('light-mode');
-      } else {
-        document.body.classList.remove('light-mode');
-      }
-    });
+                const renderChunk = () => {
+                    const fragment = document.createDocumentFragment();
+                    const nextEnd = Math.min(currentIndex + CHUNK_SIZE, items.length);
+                    for (let i = currentIndex; i < nextEnd; i++) {
+                        fragment.appendChild(createListItem(items[i]));
+                    }
+                    listElement.appendChild(fragment);
+                    currentIndex = nextEnd;
 
-    /***************************************************
-     * Start!
-     ***************************************************/
-    fetchAndDisplayJSON();
-  </script>
+                    if (currentIndex >= items.length) {
+                        loadMoreButton.remove();
+                    } else {
+                        loadMoreButton.textContent = `Load More (${items.length - currentIndex} remaining)`;
+                    }
+                };
+
+                loadMoreButton.onclick = renderChunk;
+
+                renderChunk(); // Render initial chunk
+                if (currentIndex < items.length) {
+                    container.appendChild(loadMoreButton);
+                }
+            };
+
+            /***************************************************
+             * Navigation & Interaction
+             ***************************************************/
+
+            /**
+             * Opens, scrolls to, and highlights a linked group.
+             * @param {string} stdName - Standardized name of the group.
+             */
+            const openLinkedGroup = (stdName) => {
+                const groupInfo = groupMap.get(stdName);
+                if (!groupInfo) return;
+
+                if (!groupInfo.listDiv.classList.contains('active')) {
+                     groupInfo.titleElement.click();
+                }
+
+                 setTimeout(() => {
+                    groupInfo.titleElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    groupInfo.titleElement.classList.remove('highlight-animation');
+                    void groupInfo.titleElement.offsetWidth;
+                    groupInfo.titleElement.classList.add('highlight-animation');
+                    setTimeout(() => {
+                        groupInfo.titleElement.classList.remove('highlight-animation');
+                    }, HIGHLIGHT_DURATION);
+                 }, 100);
+            };
+
+            /**
+             * Collapses all currently expanded groups.
+             */
+            const foldAllGroups = () => {
+                let foldedCount = 0;
+                groupMap.forEach(groupInfo => {
+                    if (groupInfo.listDiv.classList.contains('active')) {
+                        groupInfo.titleElement.click();
+                        foldedCount++;
+                    }
+                });
+                if (foldedCount > 0) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    showNotification(`Folded ${foldedCount} group(s).`);
+                } else {
+                     showNotification('All groups are already folded.');
+                }
+                 settingsPanel.classList.add('hidden');
+                 settingsButton.setAttribute('aria-expanded', 'false');
+            };
+
+
+            /***************************************************
+             * Event Listeners
+             ***************************************************/
+
+            settingsButton.addEventListener('click', toggleSettingsPanel);
+
+            document.addEventListener('click', (event) => {
+                if (!settingsPanel.classList.contains('hidden') &&
+                    !settingsPanel.contains(event.target) &&
+                    !settingsButton.contains(event.target)) {
+                    toggleSettingsPanel();
+                }
+            });
+
+            underscoreToggle.addEventListener('change', () => {
+                displayUnderscores = underscoreToggle.checked;
+                 localStorage.setItem('displayUnderscores', displayUnderscores);
+                renderAllGroups();
+                 settingsPanel.classList.add('hidden');
+                 settingsButton.setAttribute('aria-expanded', 'false');
+            });
+
+            foldAllButton.addEventListener('click', foldAllGroups);
+
+            document.addEventListener('keydown', (event) => {
+                if (event.shiftKey && event.key.toUpperCase() === 'F') {
+                    event.preventDefault();
+                    foldAllGroups();
+                }
+                 if (event.key === 'Escape' && !settingsPanel.classList.contains('hidden')) {
+                     toggleSettingsPanel();
+                 }
+            });
+
+            /***************************************************
+             * Initialization
+             ***************************************************/
+
+            /**
+             * Main initialization function.
+             */
+            const initializeApp = async () => {
+                loadSettings();
+                try {
+                    const rawData = await fetchJsonData();
+                    globalJsonData = filterData(rawData) || {};
+                    if (initialLoader) {
+                        initialLoader.remove();
+                    }
+                    renderAllGroups();
+                } catch (error) {
+                    console.error("Initialization failed:", error);
+                     if (initialLoader && displayContainer.contains(initialLoader)) {
+                         initialLoader.textContent = 'Failed to initialize application.';
+                         initialLoader.classList.add('text-red-400');
+                     } else if (!displayContainer.hasChildNodes()) {
+                         displayContainer.innerHTML = '<p class="text-red-400 text-center py-5">Failed to initialize application.</p>';
+                     }
+                }
+            };
+
+            initializeApp(); // Start the application
+
+        }); // End DOMContentLoaded
+    </script>
 </body>
 </html>
