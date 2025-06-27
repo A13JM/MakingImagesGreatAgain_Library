@@ -331,16 +331,33 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentIndex < items.length) container.appendChild(loadMoreButton);
     };
 
-    const showExplanationModal = async (tag) => {
-        modalTagElement.textContent = tag;
-        aiExplainModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        
-        modalExplanationElement.innerHTML = `<div class="flex items-center justify-center p-6"><div class="loader"></div></div>`;
-        
-        const explanation = await fetchExplanation(tag);
-        modalExplanationElement.textContent = explanation;
-    };
+                const showExplanationModal = async (tag) => {
+                // Reset the explanation text to its initial hidden state
+                modalExplanationElement.classList.remove('visible'); 
+                modalTagElement.textContent = tag;
+                
+                // Show the modal
+                aiExplainModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                
+                // Show the loader immediately
+                modalExplanationElement.innerHTML = `<div class="flex items-center justify-center p-6"><div class="loader"></div></div>`;
+                // Make the loader itself visible (it won't animate, just appear)
+                modalExplanationElement.classList.add('visible'); 
+
+                // Fetch the explanation from the API
+                const explanation = await fetchExplanation(tag);
+                
+                // Hide the loader and prepare for the new text animation
+                modalExplanationElement.classList.remove('visible');
+                
+                // Use a tiny delay to allow the browser to register the "hidden" state before animating to "visible"
+                setTimeout(() => {
+                    // Put the new text in and trigger the final animation
+                    modalExplanationElement.textContent = explanation;
+                    modalExplanationElement.classList.add('visible');
+                }, 50); // 50ms is plenty of time
+            };
 
     const hideExplanationModal = () => {
         aiExplainModal.classList.add('hidden');
