@@ -330,32 +330,26 @@ document.addEventListener('DOMContentLoaded', () => {
         renderChunk();
         if (currentIndex < items.length) container.appendChild(loadMoreButton);
     };
-                const showExplanationModal = async (tag) => {
-                // Reset the explanation text to its initial hidden state
-                modalExplanationElement.classList.remove('visible'); 
+                 const showExplanationModal = async (tag) => {
+                // 1. Prepare the modal before showing it
                 modalTagElement.textContent = tag;
                 
-                // Show the modal
+                // 2. IMPORTANT: Reset the explanation container to be hidden and empty
+                modalExplanationElement.classList.remove('visible');
+                modalExplanationElement.innerHTML = `<div class="flex items-center justify-center p-6"><div class="loader"></div></div>`;
+
+                // 3. Now, show the modal with the loader ready but hidden
                 aiExplainModal.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
-                
-                // Show the loader immediately
-                modalExplanationElement.innerHTML = `<div class="flex items-center justify-center p-6"><div class="loader"></div></div>`;
-                // Make the loader itself visible (it won't animate, just appear)
-                modalExplanationElement.classList.add('visible'); 
 
-                // Fetch the explanation from the API
+                // 4. Fetch the explanation from the API
                 const explanation = await fetchExplanation(tag);
                 
-                // Hide the loader and prepare for the new text animation
-                modalExplanationElement.classList.remove('visible');
+                // 5. Replace the loader's HTML with the final text content
+                modalExplanationElement.textContent = explanation;
                 
-                // Use a tiny delay to allow the browser to register the "hidden" state before animating to "visible"
-                setTimeout(() => {
-                    // Put the new text in and trigger the final animation
-                    modalExplanationElement.textContent = explanation;
-                    modalExplanationElement.classList.add('visible');
-                }, 50); // 50ms is plenty of time
+                // 6. Finally, trigger the animation by adding the .visible class
+                modalExplanationElement.classList.add('visible');
             };
 
     const hideExplanationModal = () => {
