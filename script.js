@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
      ***************************************************/
     const jsonUrl = 'https://raw.githubusercontent.com/A13JM/MakingImagesGreatAgain_Library/refs/heads/main/tag_groups_and_lists_output.json';
     const CHUNK_SIZE = 50;
-    const HIGHLIGHT_DURATION = 1500;
+    const HIGHLIGHT_DURATION = 1500; // This is actually no longer directly used in the highlight animation, but kept for context.
     const NOTIFICATION_DURATION = 2500;
     const COPY_FEEDBACK_DURATION = 500;
 
@@ -47,28 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         return wrapper;
     };
-    
-    /***************************************************
-     * AI Explanation Modal Logic
-     ***************************************************/
-    const fetchExplanation = async (tag) => {
-        // --- Vercel Backend Method ---
-        try {
-            const response = await fetch('/api/explain', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tag: tag })
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error || 'The server returned an error.');
-            }
-            return data.explanation;
-        } catch (error) {
-            console.error('Failed to fetch explanation:', error);
-            return `Error: ${error.message}`;
-        }
-    }; // <-- THIS IS THE MISSING BRACE!
+
 
     /***************************************************
      * Utility Functions
@@ -113,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching JSON data:', error);
             showNotification(`Error loading tags: ${error.message}`);
             if (initialLoader) {
-                initialLoader.textContent = 'Failed to load tag data.';
+                initialLoader.textContent = 'Failed to load tag data. Please try again later.';
                 initialLoader.classList.add('text-red-400');
             }
             throw error;
@@ -305,16 +284,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const buttonGroup = document.createElement('div');
             buttonGroup.className = 'flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200';
             
-                       const explainButton = document.createElement('button');
-            // We adjust padding slightly to better fit the new icon's wrapper
+            const explainButton = document.createElement('button');
             explainButton.className = 'p-1 rounded-full text-gray-400 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors';
             explainButton.title = `Explain "${text}" with AI`;
-            
-            // --- The Key Change ---
-            // Remove the old icon and append our new animated one
-            explainButton.innerHTML = ''; // Clear the button
-            explainButton.appendChild(createGoogleSparkleIcon()); // Add the new SVG icon
-
+            // Append the custom animated sparkle icon
+            explainButton.appendChild(createGoogleSparkleIcon()); 
             explainButton.onclick = (e) => { e.stopPropagation(); showExplanationModal(text); };
             buttonGroup.appendChild(explainButton);
 
@@ -356,27 +330,58 @@ document.addEventListener('DOMContentLoaded', () => {
         renderChunk();
         if (currentIndex < items.length) container.appendChild(loadMoreButton);
     };
-                 const showExplanationModal = async (tag) => {
-                // 1. Prepare the modal before showing it
-                modalTagElement.textContent = tag;
-                
-                // 2. IMPORTANT: Reset the explanation container to be hidden and empty
-                modalExplanationElement.classList.remove('visible');
-                modalExplanationElement.innerHTML = `<div class="flex items-center justify-center p-6"><div class="loader"></div></div>`;
 
-                // 3. Now, show the modal with the loader ready but hidden
-                aiExplainModal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
+    /***************************************************
+     * AI Explanation Modal Logic
+     ***************************************************/
+    const fetchExplanation = async (tag) => {
+        // --- Vercel Backend Method ---
+        try {
+            const response = await fetch('/api/explain', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tag: tag })
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'The server returned an error.');
+            }
+            return data.explanation;
+        } catch (error) {
+            console.error('Failed to fetch explanation:', error);
+            return `Error: ${error.message}`;
+        }
+    };
 
-                // 4. Fetch the explanation from the API
-                const explanation = await fetchExplanation(tag);
-                
-                // 5. Replace the loader's HTML with the final text content
-                modalExplanationElement.textContent = explanation;
-                
-                // 6. Finally, trigger the animation by adding the .visible class
-                modalExplanationElement.classList.add('visible');
-            };
+    const showExplanationModal = async (tag) => {
+        // 1. Prepare the modal before showing it
+        modalTagElement.textContent = tag;
+        
+        // 2. IMPORTANT: Reset the explanation container to be hidden and empty
+        modalExplanationElement.classList.remove('visible');
+        // We no longer need the old loader, as our icon is the new loader
+        modalExplanationElement.textContent = ''; 
+        
+        // 3. Find the icon in the modal header and start its loading animation
+        const headerIcon = aiExplainModal.querySelector('.gemini-icon-wrapper');
+        headerIcon.classList.add('loading');
+
+        // 4. Now, show the modal
+        aiExplainModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+
+        // 5. Fetch the explanation from the API
+        const explanation = await fetchExplanation(tag);
+        
+        // 6. Stop the loading animation on the header icon
+        headerIcon.classList.remove('loading');
+        
+        // 7. Replace the empty content with the final text
+        modalExplanationElement.textContent = explanation;
+        
+        // 8. Finally, trigger the text fade-in animation
+        modalExplanationElement.classList.add('visible');
+    };
 
     const hideExplanationModal = () => {
         aiExplainModal.classList.add('hidden');
@@ -393,13 +398,13 @@ document.addEventListener('DOMContentLoaded', () => {
             groupInfo.titleElement.click();
         }
         setTimeout(() => {
-            groupInfo.titleElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            groupInfo.titleElement.parentElement.classList.remove('highlight-animation');
-            void groupInfo.titleElement.parentElement.offsetWidth; // Trigger reflow
-            groupInfo.titleElement.parentElement.classList.add('highlight-animation');
-            setTimeout(() => {
-                groupInfo.titleElement.parentElement.classList.remove('highlight-animation');
-            }, HIGHLIGHT_DURATION);
+            // Select the parent element of the title button, which holds the highlight animation
+            const parentContainer = groupInfo.titleElement.parentElement; 
+            parentContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            parentContainer.classList.remove('highlight-animation');
+            void parentContainer.offsetWidth; // Trigger reflow
+            parentContainer.classList.add('highlight-animation');
+            // The highlight animation duration is handled by CSS, no explicit JS timeout needed here
         }, 100);
     };
 
