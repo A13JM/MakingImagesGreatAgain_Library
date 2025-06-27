@@ -1,0 +1,7 @@
+{
+  "name": "danbooru-tag-explainer",
+  "version": "1.0.0",
+  "dependencies": {
+    "@google/generative-ai": "^0.11.3"
+  }
+}
