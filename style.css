@@ -1,14 +1,16 @@
-/* --- Base Styles --- */
+/* Apply the Inter font globally */
 body {
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* Smooth transition for background/color changes */
 body, .bg-transition {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
+/* General fade-in for main content */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -18,8 +20,9 @@ main {
     animation: fadeIn 0.5s ease-out forwards;
 }
 
+/* Dark mode highlight animation for linked groups */
 @keyframes highlight-bg-dark {
-    0% { background-color: #4f46e5; } /* indigo-600 */
+    0% { background-color: #4f46e5; } /* theme('colors.indigo.600') */
     100% { background-color: transparent; }
 }
 
@@ -27,6 +30,7 @@ main {
     animation: highlight-bg-dark 1.5s ease-out;
 }
 
+/* Styles for smooth list expansion/collapse */
 .list-container {
     max-height: 0;
     overflow: hidden;
@@ -40,9 +44,10 @@ main {
     transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out;
 }
 
+/* Dark mode loader styles */
 .loader {
-     border: 4px solid #4b5563; /* gray-600 */
-     border-top: 4px solid #818cf8; /* indigo-400 */
+     border: 4px solid #4b5563; /* theme('colors.gray.600') */
+     border-top: 4px solid #818cf8; /* theme('colors.indigo.400') */
      border-radius: 50%;
      width: 24px;
      height: 24px;
@@ -54,29 +59,51 @@ main {
     100% { transform: rotate(360deg); }
 }
 
+/* Modern scrollbar styling */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 ::-webkit-scrollbar-track {
-     background: #1f2937; /* gray-800 */
+     background: #1f2937; /* theme('colors.gray.800') */
 }
 ::-webkit-scrollbar-thumb {
-     background-color: #6366f1; /* indigo-500 */
+     background-color: #6366f1; /* theme('colors.indigo.500') */
      border-radius: 4px;
-     border: 2px solid #1f2937; /* gray-800 */
+     border: 2px solid #1f2937; /* theme('colors.gray.800') */
 }
 ::-webkit-scrollbar-thumb:hover {
-    background-color: #818cf8; /* indigo-400 */
+    background-color: #818cf8; /* theme('colors.indigo.400') */
 }
 
+/* Style for indicating successful copy */
 .copied-success {
-    background-color: #047857 !important; /* emerald-700 */
+    background-color: #047857 !important; /* theme('colors.emerald.700') */
     transition: background-color 0.1s ease-in-out;
+}
+
+/* New styles for AI Explanation Modal */
+@keyframes modal-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes modal-content-in {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+#aiExplainModal.hidden {
+    display: none;
+}
+#aiExplainModal {
+    animation: modal-fade-in 0.3s ease forwards;
+}
+#aiExplainModal .modal-content {
+    animation: modal-content-in 0.3s ease forwards;
 }
 
 /* --- Google-style AI Icon & Modal Styles --- */
 
+/* Define Google's brand colors as CSS variables for easy use */
 :root {
     --gem-blue: #4285F4;
     --gem-red: #DB4437;
@@ -84,29 +111,18 @@ main {
     --gem-green: #0F9D58;
 }
 
+/* Keyframe for the main star of the icon (grows and rotates) */
 @keyframes gem-grow-rotate {
     from { transform: scale(0.5) rotate(-180deg); opacity: 0; }
     to { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
+/* Keyframe for the smaller sparkles (burst outwards) */
 @keyframes gem-burst {
     0% { transform: scale(0); opacity: 0; }
     50% { opacity: 1; }
     100% { transform: scale(1.2); opacity: 0; }
 }
-
-#aiExplainModal.hidden { display: none; }
-#aiExplainModal { animation: modal-fade-in 0.3s ease forwards; }
-#aiExplainModal .modal-content { animation: modal-content-in 0.3s ease forwards; }
-
-@keyframes modal-fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes modal-content-in {
-    from { opacity: 0; transform: scale(0.95) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.gemini-icon-wrapper { width: 28px; height: 28px; }
-/* --- Updated Rules for Hover-Triggered Animation --- */
 
 /* Static state of the icon (no animation) */
 .gemini-icon-wrapper .gem-main-sparkle {
@@ -120,21 +136,44 @@ main {
     opacity: 0;
 }
 
-/* Apply the animation ONLY when hovering the parent .group (the li) */
+/* Apply the burst animation ONLY when hovering the parent .group (the li) */
 .group:hover .gemini-icon-wrapper .gem-main-sparkle {
     animation: gem-grow-rotate 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 .group:hover .gemini-icon-wrapper .gem-secondary-sparkle {
     animation: gem-burst 1.2s ease-out infinite;
 }
+
+/* Stagger the burst animation for each small sparkle */
 .gemini-icon-wrapper .gem-secondary-sparkle:nth-child(2) { animation-delay: 0s; fill: var(--gem-blue); }
 .gemini-icon-wrapper .gem-secondary-sparkle:nth-child(3) { animation-delay: 0.2s; fill: var(--gem-red); }
 .gemini-icon-wrapper .gem-secondary-sparkle:nth-child(4) { animation-delay: 0.4s; fill: var(--gem-yellow); }
 
+/* Subtle gradient for the modal header for a premium feel */
 .modal-header-gradient {
     background: linear-gradient(to bottom, #334155, #1e293b); /* slate-700 to slate-800 */
 }
-/* --- Add this new CSS at the bottom of your style.css file --- */
+
+/* A non-linear spin animation using cubic-bezier for easing */
+@keyframes gem-spin-loading {
+    from { transform: rotate(0deg) scale(1); }
+    to { transform: rotate(360deg) scale(1); }
+}
+
+/* 
+  When the .loading class is added to the wrapper, apply this animation.
+  It will run infinitely with our custom easing.
+*/
+.gemini-icon-wrapper.loading .gem-main-sparkle {
+    animation: gem-spin-loading 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+/* We also want to hide the smaller sparkles during the loading spin */
+.gemini-icon-wrapper.loading .gem-secondary-sparkle {
+    animation: none; /* Turn off the burst animation */
+    opacity: 0;
+    transition: opacity 0.2s ease-out; /* Smoothly hide them */
+}
 
 /* Initial state of the explanation text: hidden and slightly moved up */
 #modalExplanation {
