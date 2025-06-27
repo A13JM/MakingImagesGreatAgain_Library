@@ -1,3 +1,5 @@
+
+
 /* --- Google AI Design System --- */
 
 :root {
@@ -104,6 +106,15 @@ body {
     transform: rotate(180deg);
 }
 
+.nested-group {
+    margin: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 0.5rem; /* rounded-lg */
+}
+.nested-group .group-title {
+    padding: 0.75rem 1rem;
+}
+
 .list-container {
     max-height: 0;
     overflow: hidden;
@@ -119,19 +130,45 @@ body {
 
 /* List Items */
 .list-item {
+    position: relative; /* Required to position action buttons */
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem; /* gap-2 */
-    padding: 0.75rem 1rem; /* p-3 */
-    border-radius: 0.5rem; /* rounded-lg */
-    transition: background-color 0.2s;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem; /* Compact initial padding */
+    border-radius: 0.5rem;
+    transition: background-color 0.2s, padding-block 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+.list-container > ul > .list-item:last-child {
+    border-bottom: none;
 }
 .list-item:hover {
     background-color: var(--hover);
+    padding-block: 0.75rem; /* Expanded padding on hover */
 }
 .list-item.copied-success {
     background-color: var(--success-bg) !important;
+}
+
+/* Action buttons on list items, revealed on hover */
+.action-buttons {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    opacity: 0;
+    transform: translateY(-50%) translateX(10px);
+    transition: opacity 0.2s ease-out 0.1s, transform 0.2s ease-out 0.1s; /* Delayed appearance */
+    pointer-events: none;
+}
+
+.list-item:hover .action-buttons {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+    pointer-events: auto;
 }
 
 /* Load More Button */
