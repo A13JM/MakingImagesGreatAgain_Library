@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
      ***************************************************/
     const jsonUrl = 'https://raw.githubusercontent.com/A13JM/MakingImagesGreatAgain_Library/refs/heads/main/tag_groups_and_lists_output.json';
     const CHUNK_SIZE = 50;
-    const HIGHLIGHT_DURATION = 1500; // This is actually no longer directly used in the highlight animation, but kept for context.
     const NOTIFICATION_DURATION = 2500;
     const COPY_FEEDBACK_DURATION = 500;
 
@@ -33,10 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
      ***************************************************/
     const createGoogleSparkleIcon = () => {
         const wrapper = document.createElement('div');
-        // Add pointer-events-none so the icon doesn't block the button's click event
         wrapper.className = 'gemini-icon-wrapper pointer-events-none'; 
-        
-        // The full SVG for the animated icon
         wrapper.innerHTML = `
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path class="gem-secondary-sparkle" d="M3.75 9.75L5.25 6.75L8.25 5.25L5.25 3.75L3.75 0.75L2.25 3.75L-0.75 5.25L2.25 6.75L3.75 9.75Z" transform="translate(4, 3)"/>
@@ -47,8 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         return wrapper;
     };
-
-
+    
     /***************************************************
      * Utility Functions
      ***************************************************/
@@ -60,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         notificationElement.textContent = message;
         notificationElement.classList.remove('opacity-0', 'translate-y-2');
         notificationElement.classList.add('opacity-100', 'translate-y-0');
+
         notificationTimeout = setTimeout(() => {
             notificationElement.classList.remove('opacity-100', 'translate-y-0');
             notificationElement.classList.add('opacity-0', 'translate-y-2');
@@ -72,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsButton.setAttribute('aria-expanded', !isHidden);
         if (!isHidden) settingsPanel.focus();
     };
-
+    
     const loadSettings = () => {
         const savedUnderscores = localStorage.getItem('displayUnderscores');
         displayUnderscores = savedUnderscores === null ? true : (savedUnderscores === 'true');
@@ -118,14 +114,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return data;
     };
 
-
     /***************************************************
      * Rendering Functions
      ***************************************************/
     const renderAllGroups = () => {
         displayContainer.innerHTML = '';
         groupMap.clear();
-
         if (!globalJsonData || Object.keys(globalJsonData).length === 0) {
             displayContainer.innerHTML = '<p class="text-gray-400 text-center py-5">No tag groups found.</p>';
             return;
@@ -139,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         displayContainer.appendChild(fragment);
     };
-
+    
     const renderGroup = (groupKey, groupValue, parentElement, isTopLevel) => {
         const groupId = `group-${standardizeName(groupKey).replace(/\s+/g, '-')}`;
         const listId = `${groupId}-list`;
@@ -148,39 +142,32 @@ document.addEventListener('DOMContentLoaded', () => {
         titleButton.className = `w-full flex justify-between items-center p-4 text-left font-medium ${isTopLevel ? 'text-lg text-gray-100' : 'text-base text-gray-200'} hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 rounded-t-lg bg-transition transition-colors`;
         titleButton.setAttribute('aria-expanded', 'false');
         titleButton.setAttribute('aria-controls', listId);
-        titleButton.id = groupId;
 
-        const titleSpan = document.createElement('span');
-        titleSpan.textContent = transformNameForDisplay(groupKey);
-        titleButton.appendChild(titleSpan);
-
-        const chevronIcon = document.createElement('img');
-        chevronIcon.src = "https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevron-down.svg";
-        chevronIcon.alt = "Expand/Collapse";
-        chevronIcon.className = "w-5 h-5 transform transition-transform duration-300 text-gray-400";
-        titleButton.appendChild(chevronIcon);
+        titleButton.innerHTML = `
+            <span>${transformNameForDisplay(groupKey)}</span>
+            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevron-down.svg" alt="Expand" class="w-5 h-5 transform transition-transform duration-300 text-gray-400 chevron-icon"/>
+        `;
 
         const listContainer = document.createElement('div');
         listContainer.className = 'list-container border-t border-gray-700/80 bg-gray-800/60 bg-transition';
         listContainer.id = listId;
-        listContainer.setAttribute('role', 'region');
-        listContainer.setAttribute('aria-labelledby', groupId);
 
         parentElement.appendChild(titleButton);
         parentElement.appendChild(listContainer);
 
         const stdKey = standardizeName(groupKey);
-        groupMap.set(stdKey, { titleElement: titleButton, listDiv: listContainer, value: groupValue, chevron: chevronIcon, isRendered: false });
+        groupMap.set(stdKey, { titleElement: titleButton, listDiv: listContainer, value: groupValue, isRendered: false });
 
         titleButton.addEventListener('click', () => {
             const isExpanded = listContainer.classList.contains('active');
             titleButton.setAttribute('aria-expanded', !isExpanded);
+            const chevronIcon = titleButton.querySelector('.chevron-icon');
             if (!isExpanded) {
                 listContainer.classList.add('active');
                 chevronIcon.style.transform = 'rotate(180deg)';
                 const groupInfo = groupMap.get(stdKey);
                 if (groupInfo && !groupInfo.isRendered) {
-                    renderGroupContent(groupKey, groupValue, listContainer);
+                    renderGroupContent(groupInfo.value, listContainer);
                     groupInfo.isRendered = true;
                 }
             } else {
@@ -190,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const renderGroupContent = (groupKey, value, container) => {
+    const renderGroupContent = (value, container) => {
         container.innerHTML = `<div class="flex items-center justify-center p-4"><div class="loader !w-5 !h-5"></div><span class="ml-2 text-sm text-gray-400">Loading...</span></div>`;
         setTimeout(() => {
             container.innerHTML = '';
@@ -199,14 +186,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 let hasContent = false;
                 for (const [subKey, subValue] of Object.entries(value)) {
                     if (subKey.toLowerCase() === 'list_tags' && Array.isArray(subValue)) {
-                        renderListItems(subValue, container);
-                        hasContent = true;
+                        renderListItems(subValue, container); hasContent = true;
                     } else {
                         const subDiv = document.createElement('div');
                         subDiv.className = 'my-2 mx-3 p-2 border border-gray-700/70 rounded-lg bg-gray-700/30';
                         renderGroup(subKey, subValue, subDiv, false);
-                        subFragment.appendChild(subDiv);
-                        hasContent = true;
+                        subFragment.appendChild(subDiv); hasContent = true;
                     }
                 }
                 if (subFragment.childNodes.length > 0) container.appendChild(subFragment);
@@ -218,12 +203,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 50);
     };
-
+    
     const renderListItems = (items, container) => {
-         if (!items || items.length === 0) {
-             container.innerHTML = '<p class="p-4 text-sm text-gray-500">No items.</p>';
-             return;
-         }
+        if (!items || items.length === 0) {
+            container.innerHTML = '<p class="p-4 text-sm text-gray-500">No items.</p>'; return;
+        }
         const listElement = document.createElement('ul');
         listElement.className = 'p-2';
         container.appendChild(listElement);
@@ -236,88 +220,81 @@ document.addEventListener('DOMContentLoaded', () => {
             listElement.appendChild(fragment);
         }
     };
-
+    
     const createListItem = (text) => {
         const li = document.createElement('li');
         const standardized = standardizeName(text);
-        const displayText = transformNameForDisplay(text);
         li.className = 'flex items-center justify-between gap-2 group p-2 rounded-lg hover:bg-white/5 transition-colors';
 
         if (groupMap.has(standardized)) {
-            const linkButton = document.createElement('button');
-            linkButton.textContent = displayText;
-            linkButton.className = 'text-indigo-400 hover:underline focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded px-1 py-0.5';
-            linkButton.onclick = (e) => { e.stopPropagation(); openLinkedGroup(standardized); };
-            const linkIcon = document.createElement('img');
-            linkIcon.src = "https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/link-2.svg";
-            linkIcon.alt = "Link to group";
-            linkIcon.className = "w-4 h-4 text-indigo-400";
-            
-            const container = document.createElement('div');
-            container.className = 'flex items-center gap-2';
-            container.appendChild(linkIcon);
-            container.appendChild(linkButton);
-            li.appendChild(container);
-
+            li.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/link-2.svg" alt="Link" class="w-4 h-4 text-indigo-400">
+                    <button class="text-indigo-400 hover:underline focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded px-1 py-0.5" data-link-name="${standardized}">${transformNameForDisplay(text)}</button>
+                </div>
+            `;
         } else {
-            li.title = `Click to copy "${text}"`;
             li.classList.add('cursor-pointer');
-
+            li.title = `Click to copy "${text}"`;
+            
             const tagSpan = document.createElement('span');
-            tagSpan.textContent = displayText;
             tagSpan.className = 'flex-grow truncate select-none text-gray-300';
-            li.appendChild(tagSpan);
-
-            li.onclick = async (e) => {
-                if (e.target.closest('button')) return;
-                try {
-                    await navigator.clipboard.writeText(text);
-                    showNotification(`Copied: ${displayText}`);
-                    li.classList.add('copied-success');
-                    setTimeout(() => { li.classList.remove('copied-success'); }, COPY_FEEDBACK_DURATION);
-                } catch (err) {
-                    console.error('Failed to copy:', err);
-                    showNotification('Failed to copy tag.');
-                }
-            };
-
+            tagSpan.textContent = transformNameForDisplay(text);
+            
             const buttonGroup = document.createElement('div');
             buttonGroup.className = 'flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200';
-            
+
             const explainButton = document.createElement('button');
             explainButton.className = 'p-1 rounded-full text-gray-400 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors';
             explainButton.title = `Explain "${text}" with AI`;
-            // Append the custom animated sparkle icon
-            explainButton.appendChild(createGoogleSparkleIcon()); 
+            explainButton.appendChild(createGoogleSparkleIcon());
             explainButton.onclick = (e) => { e.stopPropagation(); showExplanationModal(text); };
-            buttonGroup.appendChild(explainButton);
-
+            
             const searchButton = document.createElement('button');
-            searchButton.className = 'p-1.5 rounded-full text-gray-400 hover:bg-white/10 hover:text-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors transform hover:scale-110';
+            searchButton.className = 'p-1.5 rounded-full text-gray-400 hover:bg-white/10 hover:text-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors transform hover:scale-110 search-btn';
             searchButton.title = `Search "${text}" on Danbooru`;
-            searchButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/search.svg" alt="Search" class="w-5 h-5"/>`;
+            searchButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/search.svg" alt="Search" class="w-5 h-5 pointer-events-none"/>`;
             searchButton.onclick = (e) => {
                 e.stopPropagation();
                 window.open(`https://danbooru.donmai.us/posts?tags=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
             };
+
+            buttonGroup.appendChild(explainButton);
             buttonGroup.appendChild(searchButton);
             
+            li.appendChild(tagSpan);
             li.appendChild(buttonGroup);
+
+            li.addEventListener('click', async (e) => {
+                if (e.target.closest('button')) return;
+                try {
+                    await navigator.clipboard.writeText(text);
+                    showNotification(`Copied: ${transformNameForDisplay(text)}`);
+                    li.classList.add('copied-success');
+                    setTimeout(() => { li.classList.remove('copied-success'); }, COPY_FEEDBACK_DURATION);
+                } catch (err) {
+                    showNotification('Failed to copy tag.');
+                }
+            });
         }
         return li;
     };
+
+    displayContainer.addEventListener('click', (e) => {
+        if (e.target.dataset.linkName) {
+            e.stopPropagation();
+            openLinkedGroup(e.target.dataset.linkName);
+        }
+    });
 
     const renderChunkedList = (items, listElement, container) => {
         let currentIndex = 0;
         const loadMoreButton = document.createElement('button');
         loadMoreButton.className = 'mt-3 w-full text-center px-4 py-2 text-sm font-medium rounded-md text-indigo-300 bg-indigo-900/50 hover:bg-indigo-800/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-800';
-        loadMoreButton.textContent = `Load More (${items.length - CHUNK_SIZE} remaining)`;
         const renderChunk = () => {
             const fragment = document.createDocumentFragment();
             const nextEnd = Math.min(currentIndex + CHUNK_SIZE, items.length);
-            for (let i = currentIndex; i < nextEnd; i++) {
-                fragment.appendChild(createListItem(items[i]));
-            }
+            for (let i = currentIndex; i < nextEnd; i++) fragment.appendChild(createListItem(items[i]));
             listElement.appendChild(fragment);
             currentIndex = nextEnd;
             if (currentIndex >= items.length) {
@@ -328,14 +305,16 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         loadMoreButton.onclick = renderChunk;
         renderChunk();
-        if (currentIndex < items.length) container.appendChild(loadMoreButton);
+        if (currentIndex < items.length) {
+            container.appendChild(loadMoreButton);
+            loadMoreButton.textContent = `Load More (${items.length - CHUNK_SIZE} remaining)`;
+        }
     };
-
+    
     /***************************************************
      * AI Explanation Modal Logic
      ***************************************************/
     const fetchExplanation = async (tag) => {
-        // --- Vercel Backend Method ---
         try {
             const response = await fetch('/api/explain', {
                 method: 'POST',
@@ -343,23 +322,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ tag: tag })
             });
             const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error || 'The server returned an error.');
-            }
+            if (!response.ok) throw new Error(data.error || 'The server returned an error.');
             return data.explanation;
         } catch (error) {
             console.error('Failed to fetch explanation:', error);
             return `Error: ${error.message}`;
         }
     };
-
+    
     const showExplanationModal = async (tag) => {
         // 1. Prepare the modal before showing it
         modalTagElement.textContent = tag;
         
-        // 2. IMPORTANT: Reset the explanation container to be hidden and empty
+        // 2. Reset the explanation container to be hidden and empty
         modalExplanationElement.classList.remove('visible');
-        // We no longer need the old loader, as our icon is the new loader
         modalExplanationElement.textContent = ''; 
         
         // 3. Find the icon in the modal header and start its loading animation
@@ -398,13 +374,11 @@ document.addEventListener('DOMContentLoaded', () => {
             groupInfo.titleElement.click();
         }
         setTimeout(() => {
-            // Select the parent element of the title button, which holds the highlight animation
-            const parentContainer = groupInfo.titleElement.parentElement; 
+            const parentContainer = groupInfo.titleElement.parentElement;
             parentContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
             parentContainer.classList.remove('highlight-animation');
-            void parentContainer.offsetWidth; // Trigger reflow
+            void parentContainer.offsetWidth;
             parentContainer.classList.add('highlight-animation');
-            // The highlight animation duration is handled by CSS, no explicit JS timeout needed here
         }, 100);
     };
 
@@ -420,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             showNotification(`Folded ${foldedCount} group(s).`);
         } else {
-            showNotification('All groups are already folded.');
+             showNotification('All groups are already folded.');
         }
         settingsPanel.classList.add('hidden');
         settingsButton.setAttribute('aria-expanded', 'false');
@@ -445,10 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
     foldAllButton.addEventListener('click', foldAllGroups);
 
     document.addEventListener('keydown', (event) => {
-        if (event.shiftKey && event.key.toUpperCase() === 'F') {
-            event.preventDefault();
-            foldAllGroups();
-        }
+        if (event.shiftKey && event.key.toUpperCase() === 'F') { event.preventDefault(); foldAllGroups(); }
         if (event.key === 'Escape') {
             if (!settingsPanel.classList.contains('hidden')) toggleSettingsPanel();
             if (!aiExplainModal.classList.contains('hidden')) hideExplanationModal();
@@ -466,17 +437,13 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const rawData = await fetchJsonData();
             globalJsonData = filterData(rawData) || {};
-            if (initialLoader) {
-                initialLoader.remove();
-            }
+            if (initialLoader) initialLoader.remove();
             renderAllGroups();
         } catch (error) {
             console.error("Initialization failed:", error);
             if (initialLoader && displayContainer.contains(initialLoader)) {
-                initialLoader.textContent = 'Failed to initialize application.';
-                initialLoader.classList.add('text-red-400');
-            } else if (!displayContainer.hasChildNodes()) {
-                displayContainer.innerHTML = '<p class="text-red-400 text-center py-5">Failed to initialize application.</p>';
+                 initialLoader.textContent = 'Failed to initialize application.';
+                 initialLoader.classList.add('text-red-400');
             }
         }
     };
