@@ -106,13 +106,25 @@ main {
 }
 
 .gemini-icon-wrapper { width: 28px; height: 28px; }
+/* --- Updated Rules for Hover-Triggered Animation --- */
+
+/* Static state of the icon (no animation) */
 .gemini-icon-wrapper .gem-main-sparkle {
     fill: var(--gem-blue);
     transform-origin: center;
-    animation: gem-grow-rotate 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    transform: scale(1) rotate(0deg); /* Define the end state */
 }
 .gemini-icon-wrapper .gem-secondary-sparkle {
     transform-origin: center;
+    transform: scale(0); /* Start hidden */
+    opacity: 0;
+}
+
+/* Apply the animation ONLY when hovering the parent .group (the li) */
+.group:hover .gemini-icon-wrapper .gem-main-sparkle {
+    animation: gem-grow-rotate 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.group:hover .gemini-icon-wrapper .gem-secondary-sparkle {
     animation: gem-burst 1.2s ease-out infinite;
 }
 .gemini-icon-wrapper .gem-secondary-sparkle:nth-child(2) { animation-delay: 0s; fill: var(--gem-blue); }
