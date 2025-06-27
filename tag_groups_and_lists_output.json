@@ -1,21 +1,3 @@
-Okay, I understand. Cleaning up and standardizing a large JSON file like this is crucial for its usability, especially when it's driving an AI-powered search tool. I'll go through your `tag_groups_and_lists_output.json` and perform the following cleanups and reorganizations:
-
-1.  **Remove Parenthetical Explanations:** Tags like `bespectacled_(added_eyewear)` will become `bespectacled`. The AI can provide context, so the manual explanation is redundant.
-2.  **Remove Post Numbers:** Entries like `dark_|_(post_#7506276)` will become `dark`. These are internal references not relevant for the public-facing tool.
-3.  **Remove Duplicate/Mistagged Notes:** Phrases like `_|_unclear_/_often_mistagged` or `_|_duplicative_tag;_first_tag_more_common)` will be removed.
-4.  **Remove Non-Tag Explanations in Lists:** Items like `1._Intro`, `2._General_styles`, `These_tags_do_not_implicate_gloves.`, `See_tag_group:eyes_tags_for_the_direction_of_a_character's_gaze,_including_looking_at_viewer,_looking_to_the_side,_looking_afar,_etc.`, `Use_body_horror_when_applicable.`, `etc.`, `WIP` will be removed. These are instructional notes, not actual tags.
-5.  **Standardize `_` vs. `_/_` vs. `_//_` Separators:** Clean up tag formats like `Circle_//_○`, `Arrow_//_→`, `Heptagram_(7_points)`. We will generally use the plain text, removing Unicode symbols unless they are part of the core tag name. For `Circle_//_○`, it becomes `Circle`. For `Arrow_//_→`, it becomes `Arrow`.
-6.  **Normalize Special Characters in Tags:** For characters like `Pokémon` or `R/B`, we will use the standardized ASCII equivalent used on Danbooru (e.g., `pokemon`, `r/b`). This is important for search and AI consistency.
-7.  **Remove `_` from Group Titles:** Group titles like `Tag group:Artistic license` are already displayed nicely, but internal keys `Tag group:Artistic license` don't need the `tag group:` prefix. We'll make them clean like `"Artistic license"`.
-8.  **Flatten Redundant Sub-sections:** Some sections like `Types of masks` have `General masks` and `Location-specific masks` which then contain other categories or individual tags. I'll try to flatten these to make the structure simpler where appropriate.
-9.  **Consolidate "See also" and "External links":** These are typically not tags themselves but internal references. I'll remove them as top-level "tag" lists, as the AI explains context and external links won't be clickable within your current UI.
-10. **General Formatting:** Ensure consistent indentation and clean JSON structure.
-
-This will make your JSON much cleaner and more efficient for your application.
-
-Here is the cleaned and reorganized JSON data:
-
-```json
 {
     "Artistic license": {
         "Major changes": [
