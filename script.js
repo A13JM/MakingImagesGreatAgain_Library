@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', () => {
     /***************************************************
      * Configuration & State
@@ -178,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         renderListItems(subValue, container); hasContent = true;
                     } else {
                         const subDiv = document.createElement('div');
-                        subDiv.className = 'm-4 mt-0 p-3 border border-default rounded-lg bg-primary';
+                        subDiv.className = 'nested-group';
                         renderGroup(subKey, subValue, subDiv, false);
                         subFragment.appendChild(subDiv); hasContent = true;
                     }
@@ -198,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             container.innerHTML = '<p class="text-secondary text-center p-4">No items.</p>'; return;
         }
         const listElement = document.createElement('ul');
-        listElement.className = 'p-2 space-y-1';
+        listElement.className = 'p-2';
         container.appendChild(listElement);
 
         if (items.length > CHUNK_SIZE) {
@@ -231,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tagSpan.textContent = transformNameForDisplay(text);
             
             const buttonGroup = document.createElement('div');
-            buttonGroup.className = 'flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200';
+            buttonGroup.className = 'action-buttons flex items-center gap-1';
 
             const explainButton = document.createElement('button');
             explainButton.className = 'button-icon-secondary';
