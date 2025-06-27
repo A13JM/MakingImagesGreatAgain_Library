@@ -22,7 +22,7 @@
             "contemporary",
             "enmaided",
             "costume_combination",
-            "cosplay",
+            "cosplay"
         ],
         "Changes_of_specific_clothes_or_accessories": [
             "alternate_headwear",
@@ -190,9 +190,9 @@
             "multiple_4koma",
             "5koma",
             "borderless_panels",
-            "manga_(Japanese_term_for_comic_books)",
-            "left-to-right_manga_(LTR_Japanese/Chinese_works)",
-            "right-to-left_comic_(RTL_Western/Korean_works)",
+            "manga",
+            "left-to-right_manga",
+            "right-to-left_comic",
             "silent_comic",
             "corrupted_file",
             "corrupted_Twitter_file",
@@ -453,7 +453,7 @@
             "Tag_Groups",
             "Tag_Group:Drawing_Software",
             "bromide"
-        ],
+        ]
     },
     "Tag group:Backgrounds": {
         "About": [
@@ -558,7 +558,7 @@
             "censored_nipples",
             "censored_clitoris",
             "censored_testicles",
-            "censored_urethra_(aka_censored_urethra)",
+            "censored_urethra",
             "Non-sexual_censorship",
             "censored_gesture",
             "censored_poop",
@@ -567,7 +567,8 @@
             "censored_text",
             "redaction",
             "censored_violence",
-            "fake_censor_(aka_unnecessary_censor)",
+            "fake_censor",
+            "unnecessary_censor",
             "bubble_filter",
             "censored_eyebrows",
             "censored_feet",
@@ -596,7 +597,6 @@
             "redaction",
             "censored_violence",
             "fake_censor",
-            "unnecessary_censor",
             "bubble_filter",
             "censored_eyebrows",
             "censored_feet",
@@ -640,7 +640,7 @@
             "Nude_filter",
             "Tag_groups",
             "Tag_group:Covering"
-        ],
+        ]
     },
     "Tag group:Colors": {
         "Single_color_themes": [
@@ -737,6 +737,7 @@
             "text_focus"
         ],
         "See_also": [
+            "soft_focus_—_A_deliberate_camera_lens_flaw_effect.",
             "Tag_group:colors"
         ]
     },
