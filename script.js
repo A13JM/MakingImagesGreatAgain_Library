@@ -330,7 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderChunk();
         if (currentIndex < items.length) container.appendChild(loadMoreButton);
     };
-
                 const showExplanationModal = async (tag) => {
                 // Reset the explanation text to its initial hidden state
                 modalExplanationElement.classList.remove('visible'); 
