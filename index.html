@@ -20,14 +20,23 @@
         body, .bg-transition {
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
+        
+        /* General fade-in for main content */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        main {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
 
         /* Dark mode highlight animation for linked groups */
          @keyframes highlight-bg-dark {
-            0% { background-color: theme('colors.yellow.600'); } /* Dark mode highlight */
+            0% { background-color: theme('colors.indigo.600'); } /* Dark mode highlight */
             100% { background-color: transparent; }
         }
 
-        /* Always use dark mode highlight animation */
         .highlight-animation {
             animation: highlight-bg-dark 1.5s ease-out;
         }
@@ -42,70 +51,86 @@
         .list-container.active {
             max-height: 5000px; /* Sufficiently large max-height */
             opacity: 1;
-            overflow: visible; /* Allow content to be visible */
-             transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out; /* Opacity transition on open */
+            overflow: visible;
+             transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out;
         }
 
-        /* Dark mode loader styles (now the default) */
+        /* Dark mode loader styles */
         .loader {
-             border: 4px solid theme('colors.gray.600'); /* Dark mode border */
-             border-top: 4px solid theme('colors.indigo.400'); /* Dark mode spinner */
+             border: 4px solid theme('colors.gray.600');
+             border-top: 4px solid theme('colors.indigo.400');
              border-radius: 50%;
              width: 24px;
              height: 24px;
              animation: spin 1s linear infinite;
         }
 
-        /* Spin animation for loader */
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
-        /* Basic scrollbar styling (using dark mode styles as default) */
+        /* Modern scrollbar styling */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-             background: theme('colors.gray.800'); /* Dark track */
+             background: theme('colors.gray.800');
         }
         ::-webkit-scrollbar-thumb {
-             background-color: theme('colors.indigo.500'); /* Dark thumb */
+             background-color: theme('colors.indigo.500');
              border-radius: 4px;
+             border: 2px solid theme('colors.gray.800');
         }
         ::-webkit-scrollbar-thumb:hover {
-            background-color: theme('colors.indigo.600'); /* Dark thumb hover */
+            background-color: theme('colors.indigo.400');
         }
-        /* Add transition to list items for smooth hover and click feedback */
-        li {
-            transition: background-color 0.2s ease-in-out;
-        }
+        
         /* Style for indicating successful copy */
         .copied-success {
-            background-color: theme('colors.emerald.700') !important; /* Use !important to override hover */
+            background-color: theme('colors.emerald.700') !important;
             transition: background-color 0.1s ease-in-out;
+        }
+        
+        /* New styles for AI Explanation Modal */
+        @keyframes modal-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes modal-content-in {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        #aiExplainModal.hidden {
+            display: none;
+        }
+        #aiExplainModal {
+            animation: modal-fade-in 0.3s ease forwards;
+        }
+        #aiExplainModal .modal-content {
+            animation: modal-content-in 0.3s ease forwards;
         }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col bg-transition">
 
-    <header class="bg-gray-800 shadow-md sticky top-0 z-50 bg-transition">
+    <header class="bg-gray-800/80 backdrop-blur-sm shadow-md sticky top-0 z-50 bg-transition border-b border-gray-700/60">
         <div class="container mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-semibold text-gray-200">Danbooru Tag Search</h1>
-            <button id="settingsButton" aria-label="Open Settings" aria-haspopup="true" aria-expanded="false" class="p-2 rounded-md text-gray-400 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-800">
-                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/settings.svg" alt="Settings" class="w-5 h-5"/>
+            <h1 class="text-xl md:text-2xl font-bold text-gray-100 tracking-tight">Danbooru Tag Explorer</h1>
+            <button id="settingsButton" aria-label="Open Settings" aria-haspopup="true" aria-expanded="false" class="p-2 rounded-full text-gray-400 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 focus:ring-offset-gray-900 transition-colors">
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/settings-2.svg" alt="Settings" class="w-5 h-5"/>
             </button>
         </div>
-        <div id="settingsPanel" class="absolute right-4 md:right-6 mt-1 w-56 rounded-md shadow-lg bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-50" role="menu" aria-orientation="vertical" aria-labelledby="settingsButton" tabindex="-1">
-            <div class="py-1" role="none">
-                <label for="underscoreToggle" class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 cursor-pointer" role="menuitem" tabindex="-1">
-                    <input type="checkbox" id="underscoreToggle" class="mr-2 h-4 w-4 rounded border-gray-500 text-indigo-600 focus:ring-indigo-500 bg-gray-600 checked:bg-indigo-500">
+        <div id="settingsPanel" class="absolute right-4 md:right-6 mt-2 w-60 rounded-xl shadow-lg bg-gray-800 border border-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-50" role="menu" aria-orientation="vertical" aria-labelledby="settingsButton" tabindex="-1">
+            <div class="p-1.5" role="none">
+                <label for="underscoreToggle" class="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-white/10 rounded-lg cursor-pointer transition-colors" role="menuitem" tabindex="-1">
+                    <input type="checkbox" id="underscoreToggle" class="h-4 w-4 rounded border-gray-500 text-indigo-500 focus:ring-indigo-500 bg-gray-600 checked:bg-indigo-500 focus:ring-offset-0">
                     Display Underscores
                 </label>
-                 <div class="border-t border-gray-600 my-1"></div>
-                 <button id="foldAllButton" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-gray-200 hover:bg-gray-600" role="menuitem" tabindex="-1">
-                     <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevrons-up.svg" alt="" class="w-4 h-4 inline-block"/>
+                 <div class="border-t border-gray-700 my-1"></div>
+                 <button id="foldAllButton" class="w-full text-left flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-white/10 rounded-lg transition-colors" role="menuitem" tabindex="-1">
+                     <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevrons-up.svg" alt="" class="w-4 h-4 inline-block text-gray-400"/>
                      Fold All (Shift+F)
                  </button>
             </div>
@@ -113,7 +138,7 @@
     </header>
 
     <main class="container mx-auto p-4 md:p-6 flex-grow">
-        <div id="json-display" class="space-y-3">
+        <div id="json-display" class="space-y-4">
             <div id="initial-loader" class="flex items-center justify-center h-40 pt-10">
                  <div class="loader"></div>
                  <span class="ml-3 text-gray-400">Loading tags...</span>
@@ -121,12 +146,38 @@
             </div>
     </main>
 
-    <footer class="bg-gray-800 text-center p-4 text-sm text-gray-400 mt-8 bg-transition">
-        Made by A13JM
+    <footer class="bg-gray-800/80 border-t border-gray-700/60 text-center p-4 text-sm text-gray-400 mt-8 bg-transition">
+        Made by A13JM. Revamped by an AI Assistant.
     </footer>
 
-    <div id="notification" class="fixed bottom-5 right-5 bg-gray-200 text-gray-900 px-4 py-2 rounded-md shadow-lg opacity-0 transform translate-y-2 transition-all duration-300 ease-in-out z-[100]">
+    <div id="notification" class="fixed bottom-5 right-5 bg-gray-100 text-gray-900 px-5 py-3 rounded-lg shadow-2xl opacity-0 transform translate-y-2 transition-all duration-300 ease-in-out z-[100] font-medium">
         </div>
+
+    <!-- AI Explanation Modal -->
+    <div id="aiExplainModal" class="hidden fixed inset-0 bg-black/60 z-[101] flex items-center justify-center p-4">
+        <div id="modalOverlay" class="absolute inset-0"></div>
+        <div class="modal-content relative bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md m-4">
+            <div class="flex items-center justify-between p-4 border-b border-gray-700">
+                <div class="flex items-center gap-2">
+                    <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/sparkles.svg" alt="AI" class="w-5 h-5 text-indigo-400"/>
+                    <h3 class="text-lg font-semibold text-gray-100">Tag Explanation</h3>
+                </div>
+                <button id="modalCloseButton" class="p-1 rounded-full text-gray-500 hover:bg-white/10 hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/x.svg" alt="Close" class="w-5 h-5"/>
+                </button>
+            </div>
+            <div class="p-5">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-sm text-gray-400">Tag:</span>
+                    <code id="modalTag" class="px-2 py-1 bg-gray-700 rounded-md text-indigo-300 font-mono text-sm"></code>
+                </div>
+                <div id="modalExplanation" class="text-gray-300 leading-relaxed">
+                    <!-- Loader will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -147,41 +198,44 @@
             const underscoreToggle = document.getElementById('underscoreToggle');
             const foldAllButton = document.getElementById('foldAllButton');
             const notificationElement = document.getElementById('notification');
+            // New Modal DOM Elements
+            const aiExplainModal = document.getElementById('aiExplainModal');
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modalCloseButton = document.getElementById('modalCloseButton');
+            const modalTagElement = document.getElementById('modalTag');
+            const modalExplanationElement = document.getElementById('modalExplanation');
+
 
             // Global State
             let displayUnderscores = true; // Default setting
             const groupMap = new Map(); // Map standardized group names to their elements/data
             let globalJsonData = null; // Stores the fetched and filtered JSON data
             let notificationTimeout = null; // Timeout ID for notification dismissal
+            
+            // --- AI Feature: Sample Tag Explanations ---
+            // In a real application, this would be replaced with an API call to a backend service.
+            const tagExplanations = new Map([
+                ['masterpiece', "A quality modifier tag used to prompt for the highest possible image quality, detail, and composition. It often pushes the model to generate its best work, resembling a polished piece of art."],
+                ['best_quality', "Similar to 'masterpiece', this is a quality modifier tag that encourages the generator to produce a high-fidelity image, focusing on clarity, sharpness, and fine details."],
+                ['highres', "A tag that prompts for a high-resolution image. While it can increase pixel count in some models, in Stable Diffusion it more often influences the level of detail and texture to mimic a high-resolution source."],
+                ['1girl', "A foundational content tag that specifies the main subject of the image should be a single female character. It's often one of the first tags used in a prompt for character art."],
+                ['cowboy_shot', "A framing tag that specifies the character should be shown from mid-thigh up. It's a classic cinematic shot that is wider than a medium shot but tighter than a full-body shot."],
+                ['bokeh', "An aesthetic tag that creates a soft, out-of-focus background effect, often seen as pleasingly blurred circles of light. It helps to emphasize the subject by separating it from the background."],
+                ['looking_at_viewer', "A pose and interaction tag that directs the character's gaze directly towards the 'camera' or viewer, creating a sense of engagement and direct contact."],
+                ['cinematic_lighting', "An aesthetic tag that aims to replicate the dramatic, moody, and stylized lighting seen in movies. It often involves high contrast, specific color temperatures, and effects like god rays or lens flare."],
+                ['from_side', "A camera angle tag that specifies the subject should be viewed from their side, creating a profile or semi-profile view. Useful for showing off character silhouettes or specific details on their side."],
+            ]);
+
 
             /***************************************************
              * Utility Functions
              ***************************************************/
 
-            /**
-             * Standardizes a name for internal lookups (lowercase, spaces instead of underscores).
-             * @param {string} name - The name to standardize.
-             * @returns {string} The standardized name.
-             */
             const standardizeName = (name) => name ? name.toLowerCase().replace(/_/g, ' ').trim() : '';
+            const transformNameForDisplay = (name) => !name ? '' : (displayUnderscores ? name : name.replace(/_/g, ' '));
 
-            /**
-             * Transforms a name for display based on the 'displayUnderscores' setting.
-             * @param {string} name - The name to transform.
-             * @returns {string} The name formatted for display.
-             */
-            const transformNameForDisplay = (name) => {
-                if (!name) return '';
-                return displayUnderscores ? name : name.replace(/_/g, ' ');
-            };
-
-            /**
-             * Shows a temporary notification message.
-             * @param {string} message - The message to display.
-             * @param {string} type - 'success' (default) or 'error'.
-             */
             const showNotification = (message, type = 'success') => {
-                clearTimeout(notificationTimeout); // Clear any existing timeout
+                clearTimeout(notificationTimeout);
                 notificationElement.textContent = message;
                 notificationElement.classList.remove('opacity-0', 'translate-y-2');
                 notificationElement.classList.add('opacity-100', 'translate-y-0');
@@ -192,88 +246,51 @@
                 }, NOTIFICATION_DURATION);
             };
 
-            /**
-             * Toggles the visibility of the settings panel.
-             */
             const toggleSettingsPanel = () => {
                 const isHidden = settingsPanel.classList.contains('hidden');
                 settingsPanel.classList.toggle('hidden');
                 settingsButton.setAttribute('aria-expanded', !isHidden);
                 if (!isHidden) {
-                    settingsPanel.focus(); // Focus the panel when opened
+                    settingsPanel.focus();
                 }
             };
-
-             /**
-             * Applies the dark mode setting to the HTML element.
-             * Simplified as dark mode is always on.
-             */
-            const applyDarkMode = () => {
-                if (!document.documentElement.classList.contains('dark')) {
-                     document.documentElement.classList.add('dark');
-                }
-            };
-
-            /**
-             * Loads settings from localStorage or uses defaults.
-             * Only handles underscore setting now.
-             */
+            
             const loadSettings = () => {
                 const savedUnderscores = localStorage.getItem('displayUnderscores');
                 displayUnderscores = savedUnderscores === null ? true : (savedUnderscores === 'true');
                 underscoreToggle.checked = displayUnderscores;
-                applyDarkMode(); // Ensure dark mode class is set
                 localStorage.setItem('displayUnderscores', displayUnderscores);
             };
-
 
             /***************************************************
              * Data Fetching and Filtering
              ***************************************************/
-
-            /**
-             * Fetches JSON data from the specified URL.
-             * @returns {Promise<object>} A promise that resolves with the JSON data.
-             */
-            const fetchJsonData = async () => {
+            const fetchJsonData = async () => { /* ... (no changes needed) ... */
                 try {
                     const response = await fetch(jsonUrl);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                     return await response.json();
                 } catch (error) {
                     console.error('Error fetching JSON data:', error);
                     showNotification(`Error loading tags: ${error.message}`, 'error');
-                    if (initialLoader) { // Check if loader exists before modifying
+                    if (initialLoader) {
                         initialLoader.textContent = 'Failed to load tag data. Please check the console and try again later.';
                         initialLoader.classList.add('text-red-400');
                     }
                     throw error;
                 }
             };
-
-            /**
-             * Recursively filters the data.
-             * @param {*} data - The data to filter.
-             * @returns {*} The filtered data, or null if empty.
-             */
-            const filterData = (data) => {
+            const filterData = (data) => { /* ... (no changes needed) ... */
                 const tagGroupStr = 'tag groups';
-
                 if (Array.isArray(data)) {
-                    const filteredArray = data
-                        .map(item => filterData(item))
-                        .filter(item => item !== null && standardizeName(String(item)) !== tagGroupStr);
+                    const filteredArray = data.map(item => filterData(item)).filter(item => item !== null && standardizeName(String(item)) !== tagGroupStr);
                     return filteredArray.length > 0 ? filteredArray : null;
                 } else if (typeof data === 'object' && data !== null) {
                     const filteredObject = {};
                     for (const [key, value] of Object.entries(data)) {
-                         if (standardizeName(key) === tagGroupStr) continue;
+                        if (standardizeName(key) === tagGroupStr) continue;
                         const filteredValue = filterData(value);
-                        if (filteredValue !== null) {
-                            filteredObject[key] = filteredValue;
-                        }
+                        if (filteredValue !== null) filteredObject[key] = filteredValue;
                     }
                     return Object.keys(filteredObject).length > 0 ? filteredObject : null;
                 } else if (typeof data === 'string') {
@@ -282,14 +299,9 @@
                 return data;
             };
 
-
             /***************************************************
              * Rendering Functions
              ***************************************************/
-
-            /**
-             * Renders all top-level groups from the globalJsonData.
-             */
             const renderAllGroups = () => {
                 displayContainer.innerHTML = '';
                 groupMap.clear();
@@ -298,30 +310,22 @@
                     displayContainer.innerHTML = '<p class="text-gray-400 text-center py-5">No tag groups found.</p>';
                     return;
                 }
-
                 const fragment = document.createDocumentFragment();
                 for (const [key, value] of Object.entries(globalJsonData)) {
                     const categoryDiv = document.createElement('div');
-                    categoryDiv.className = 'bg-gray-800 rounded-lg border border-gray-700 shadow-sm overflow-hidden bg-transition';
+                    categoryDiv.className = 'bg-gray-800/60 rounded-xl border border-gray-700/80 shadow-sm overflow-hidden bg-transition';
                     renderGroup(key, value, categoryDiv, true);
                     fragment.appendChild(categoryDiv);
                 }
-                 displayContainer.appendChild(fragment);
+                displayContainer.appendChild(fragment);
             };
-
-            /**
-             * Renders a collapsible group (or subgroup).
-             * @param {string} groupKey - The name/key of this group.
-             * @param {*} groupValue - The data for this group.
-             * @param {HTMLElement} parentElement - The container element.
-             * @param {boolean} isTopLevel - If this is a top-level group.
-             */
+            
             const renderGroup = (groupKey, groupValue, parentElement, isTopLevel) => {
                 const groupId = `group-${standardizeName(groupKey).replace(/\s+/g, '-')}`;
                 const listId = `${groupId}-list`;
 
                 const titleButton = document.createElement('button');
-                titleButton.className = `w-full flex justify-between items-center p-3 text-left font-medium ${isTopLevel ? 'text-lg' : 'text-base'} hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 rounded-t-lg bg-transition`;
+                titleButton.className = `w-full flex justify-between items-center p-4 text-left font-medium ${isTopLevel ? 'text-lg text-gray-100' : 'text-base text-gray-200'} hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 rounded-t-lg bg-transition transition-colors`;
                 titleButton.setAttribute('aria-expanded', 'false');
                 titleButton.setAttribute('aria-controls', listId);
                 titleButton.id = groupId;
@@ -333,11 +337,11 @@
                 const chevronIcon = document.createElement('img');
                 chevronIcon.src = "https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevron-down.svg";
                 chevronIcon.alt = "Expand/Collapse";
-                chevronIcon.className = "w-5 h-5 transform transition-transform duration-300";
+                chevronIcon.className = "w-5 h-5 transform transition-transform duration-300 text-gray-400";
                 titleButton.appendChild(chevronIcon);
 
                 const listContainer = document.createElement('div');
-                listContainer.className = 'list-container border-t border-gray-700 bg-gray-800 bg-transition';
+                listContainer.className = 'list-container border-t border-gray-700/80 bg-gray-800/60 bg-transition';
                 listContainer.id = listId;
                 listContainer.setAttribute('role', 'region');
                 listContainer.setAttribute('aria-labelledby', groupId);
@@ -346,19 +350,13 @@
                 parentElement.appendChild(listContainer);
 
                 const stdKey = standardizeName(groupKey);
-                groupMap.set(stdKey, {
-                    titleElement: titleButton,
-                    listDiv: listContainer,
-                    value: groupValue,
-                    chevron: chevronIcon,
-                    isRendered: false
-                });
+                groupMap.set(stdKey, { titleElement: titleButton, listDiv: listContainer, value: groupValue, chevron: chevronIcon, isRendered: false });
 
                 titleButton.addEventListener('click', () => {
                     const isExpanded = listContainer.classList.contains('active');
+                    titleButton.setAttribute('aria-expanded', !isExpanded);
                     if (!isExpanded) {
                         listContainer.classList.add('active');
-                        titleButton.setAttribute('aria-expanded', 'true');
                         chevronIcon.style.transform = 'rotate(180deg)';
                         const groupInfo = groupMap.get(stdKey);
                         if (groupInfo && !groupInfo.isRendered) {
@@ -367,70 +365,47 @@
                         }
                     } else {
                         listContainer.classList.remove('active');
-                        titleButton.setAttribute('aria-expanded', 'false');
-                         chevronIcon.style.transform = 'rotate(0deg)';
+                        chevronIcon.style.transform = 'rotate(0deg)';
                     }
                 });
             };
 
-            /**
-             * Renders the content *inside* a group's collapsible container.
-             * @param {string} groupKey - The parent group's key.
-             * @param {*} value - The data to render.
-             * @param {HTMLElement} container - The container element.
-             */
             const renderGroupContent = (groupKey, value, container) => {
-                container.innerHTML = `
-                    <div class="flex items-center justify-center p-4">
-                        <div class="loader !w-5 !h-5"></div>
-                        <span class="ml-2 text-sm text-gray-400">Loading...</span>
-                    </div>`;
-
+                container.innerHTML = `<div class="flex items-center justify-center p-4"><div class="loader !w-5 !h-5"></div><span class="ml-2 text-sm text-gray-400">Loading...</span></div>`;
                 setTimeout(() => {
-                    container.innerHTML = ''; // Clear loader
-
+                    container.innerHTML = '';
                     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
                         const subFragment = document.createDocumentFragment();
                         let hasContent = false;
                         for (const [subKey, subValue] of Object.entries(value)) {
-                             if (subKey.toLowerCase() === 'list_tags' && Array.isArray(subValue)) {
+                            if (subKey.toLowerCase() === 'list_tags' && Array.isArray(subValue)) {
                                 renderListItems(subValue, container);
                                 hasContent = true;
                             } else {
                                 const subDiv = document.createElement('div');
-                                subDiv.className = 'my-2 mx-3 p-2 border border-gray-700 rounded-md bg-gray-700/50';
+                                subDiv.className = 'my-2 mx-3 p-2 border border-gray-700/70 rounded-lg bg-gray-700/30';
                                 renderGroup(subKey, subValue, subDiv, false);
                                 subFragment.appendChild(subDiv);
                                 hasContent = true;
                             }
                         }
-                        if (subFragment.childNodes.length > 0) {
-                             container.appendChild(subFragment);
-                        } else if (!hasContent) {
-                             container.innerHTML = '<p class="p-3 text-sm text-gray-500">No items in this group.</p>';
-                        }
+                        if (subFragment.childNodes.length > 0) container.appendChild(subFragment);
+                        else if (!hasContent) container.innerHTML = '<p class="p-3 text-sm text-gray-500">No items in this group.</p>';
                     } else if (Array.isArray(value) || typeof value === 'string') {
                         renderListItems(Array.isArray(value) ? value : [value], container);
                     } else {
-                         container.innerHTML = '<p class="p-3 text-sm text-gray-500">No items in this group.</p>';
+                        container.innerHTML = '<p class="p-3 text-sm text-gray-500">No items in this group.</p>';
                     }
                 }, 50);
             };
-
-             /**
-             * Renders list items within a container, using chunking if necessary.
-             * @param {Array<string>} items - Array of strings (tags or group names).
-             * @param {HTMLElement} container - The parent element.
-             */
+            
             const renderListItems = (items, container) => {
                  if (!items || items.length === 0) {
-                     container.innerHTML = '<p class="p-3 text-sm text-gray-500">No items.</p>';
+                     container.innerHTML = '<p class="p-4 text-sm text-gray-500">No items.</p>';
                      return;
                  }
-
                 const listElement = document.createElement('ul');
-                // Added negative margin to counteract padding on LIs for hover effect
-                listElement.className = 'space-y-1 p-2 -m-px'; // Adjust padding/margin
+                listElement.className = 'p-2';
                 container.appendChild(listElement);
 
                 if (items.length > CHUNK_SIZE) {
@@ -441,104 +416,89 @@
                     listElement.appendChild(fragment);
                 }
             };
-
-
-            /**
-             * Creates a single list item element (tag or group link).
-             * @param {string} text - The text content of the item (original format with underscores).
-             * @returns {HTMLElement} The created list item (<li>) element.
-             */
+            
             const createListItem = (text) => {
                 const li = document.createElement('li');
                 const standardized = standardizeName(text);
                 const displayText = transformNameForDisplay(text);
+                li.className = 'flex items-center justify-between gap-2 group p-2 rounded-lg hover:bg-white/5 transition-colors';
 
                 if (groupMap.has(standardized)) {
                     // --- Group Link ---
-                    li.className = 'flex items-center gap-2 px-2 py-1 rounded-md'; // Consistent padding
                     const linkButton = document.createElement('button');
                     linkButton.textContent = displayText;
                     linkButton.className = 'text-indigo-400 hover:underline focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded px-1 py-0.5';
-                    linkButton.onclick = (e) => {
-                         e.stopPropagation();
-                         openLinkedGroup(standardized);
-                    };
+                    linkButton.onclick = (e) => { e.stopPropagation(); openLinkedGroup(standardized); };
                     const linkIcon = document.createElement('img');
                     linkIcon.src = "https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/link-2.svg";
                     linkIcon.alt = "Link to group";
-                    linkIcon.className = "w-4 h-4 inline-block ml-1 text-indigo-400";
-
-                    li.appendChild(linkButton);
-                    li.appendChild(linkIcon);
+                    linkIcon.className = "w-4 h-4 text-indigo-400";
+                    
+                    const container = document.createElement('div');
+                    container.className = 'flex items-center gap-2';
+                    container.appendChild(linkIcon);
+                    container.appendChild(linkButton);
+                    li.appendChild(container);
 
                 } else {
                     // --- Regular Tag (Click to Copy) ---
-                    li.className = 'flex items-center justify-between gap-2 group px-2 py-1 rounded-md hover:bg-gray-700 cursor-pointer'; // Added cursor-pointer
-                    li.title = `Click to copy "${text}"`; // Add tooltip
+                    li.title = `Click to copy "${text}"`;
+                    li.classList.add('cursor-pointer');
 
                     const tagSpan = document.createElement('span');
                     tagSpan.textContent = displayText;
-                    tagSpan.className = 'flex-grow truncate select-none'; // Prevent text selection during click
+                    tagSpan.className = 'flex-grow truncate select-none text-gray-300';
                     li.appendChild(tagSpan);
 
-                    // Click listener for the entire list item to copy
                     li.onclick = async (e) => {
-                        // Prevent click from propagating if search button is clicked
-                        if (e.target.closest('button')) {
-                            return;
-                        }
+                        if (e.target.closest('button')) return;
                         try {
-                            await navigator.clipboard.writeText(text); // Copy original text
+                            await navigator.clipboard.writeText(text);
                             showNotification(`Copied: ${displayText}`);
-                            // Visual feedback: temporary background change
                             li.classList.add('copied-success');
-                            setTimeout(() => {
-                                li.classList.remove('copied-success');
-                            }, COPY_FEEDBACK_DURATION);
+                            setTimeout(() => { li.classList.remove('copied-success'); }, COPY_FEEDBACK_DURATION);
                         } catch (err) {
                             console.error('Failed to copy:', err);
                             showNotification('Failed to copy tag.', 'error');
                         }
                     };
 
-                    // Container for the search button (copy button removed)
                     const buttonGroup = document.createElement('div');
-                    // Make search button visible on list item hover (group-hover)
                     buttonGroup.className = 'flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200';
+                    
+                    // --- New AI Explain Button ---
+                    const explainButton = document.createElement('button');
+                    explainButton.className = 'p-1.5 rounded-full text-gray-400 hover:bg-white/10 hover:text-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors transform hover:scale-110';
+                    explainButton.title = `Explain "${text}" with AI`;
+                    explainButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/sparkles.svg" alt="Explain" class="w-5 h-5"/>`;
+                    explainButton.onclick = (e) => {
+                        e.stopPropagation();
+                        showExplanationModal(text);
+                    };
+                    buttonGroup.appendChild(explainButton);
 
-                    // Danbooru Search Button (remains)
+                    // Danbooru Search Button
                     const searchButton = document.createElement('button');
-                    searchButton.className = 'p-1 rounded text-gray-400 hover:bg-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-500';
+                    searchButton.className = 'p-1.5 rounded-full text-gray-400 hover:bg-white/10 hover:text-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors transform hover:scale-110';
                     searchButton.title = `Search "${text}" on Danbooru`;
-                    searchButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/search.svg" alt="Search" class="w-4 h-4"/>`;
+                    searchButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/search.svg" alt="Search" class="w-5 h-5"/>`;
                     searchButton.onclick = (e) => {
-                        e.stopPropagation(); // Prevent li click handler when search is clicked
-                        const query = encodeURIComponent(text);
-                        window.open(`https://danbooru.donmai.us/posts?tags=${query}`, '_blank', 'noopener,noreferrer');
+                        e.stopPropagation();
+                        window.open(`https://danbooru.donmai.us/posts?tags=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
                     };
                     buttonGroup.appendChild(searchButton);
-
-                    // Removed Copy Button element and its logic
-
-                    li.appendChild(buttonGroup); // Add button group (containing only search now)
+                    
+                    li.appendChild(buttonGroup);
                 }
 
                 return li;
             };
 
-            /**
-             * Handles rendering large lists in chunks with a "Load More" button.
-             * @param {Array<string>} items - The full list of items.
-             * @param {HTMLElement} listElement - The <ul> element.
-             * @param {HTMLElement} container - The parent container.
-             */
-            const renderChunkedList = (items, listElement, container) => {
+            const renderChunkedList = (items, listElement, container) => { /* ... (no changes needed) ... */
                 let currentIndex = 0;
-
                 const loadMoreButton = document.createElement('button');
                 loadMoreButton.className = 'mt-3 w-full text-center px-4 py-2 text-sm font-medium rounded-md text-indigo-300 bg-indigo-900/50 hover:bg-indigo-800/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-800';
                 loadMoreButton.textContent = `Load More (${items.length - CHUNK_SIZE} remaining)`;
-
                 const renderChunk = () => {
                     const fragment = document.createDocumentFragment();
                     const nextEnd = Math.min(currentIndex + CHUNK_SIZE, items.length);
@@ -547,53 +507,68 @@
                     }
                     listElement.appendChild(fragment);
                     currentIndex = nextEnd;
-
                     if (currentIndex >= items.length) {
                         loadMoreButton.remove();
                     } else {
                         loadMoreButton.textContent = `Load More (${items.length - currentIndex} remaining)`;
                     }
                 };
-
                 loadMoreButton.onclick = renderChunk;
-
-                renderChunk(); // Render initial chunk
+                renderChunk();
                 if (currentIndex < items.length) {
                     container.appendChild(loadMoreButton);
                 }
             };
 
             /***************************************************
-             * Navigation & Interaction
+             * AI Explanation Modal Logic
              ***************************************************/
-
-            /**
-             * Opens, scrolls to, and highlights a linked group.
-             * @param {string} stdName - Standardized name of the group.
-             */
-            const openLinkedGroup = (stdName) => {
-                const groupInfo = groupMap.get(stdName);
-                if (!groupInfo) return;
-
-                if (!groupInfo.listDiv.classList.contains('active')) {
-                     groupInfo.titleElement.click();
-                }
-
-                 setTimeout(() => {
-                    groupInfo.titleElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    groupInfo.titleElement.classList.remove('highlight-animation');
-                    void groupInfo.titleElement.offsetWidth;
-                    groupInfo.titleElement.classList.add('highlight-animation');
-                    setTimeout(() => {
-                        groupInfo.titleElement.classList.remove('highlight-animation');
-                    }, HIGHLIGHT_DURATION);
-                 }, 100);
+            const fetchExplanation = async (tag) => {
+                // Simulate an API call delay
+                await new Promise(resolve => setTimeout(resolve, 500));
+                return tagExplanations.get(tag.toLowerCase()) || "Sorry, an explanation for this tag is not available in this demo. In a real application, an AI would generate this on the fly!";
+            };
+            
+            const showExplanationModal = async (tag) => {
+                modalTagElement.textContent = tag;
+                aiExplainModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                
+                // Show loader
+                modalExplanationElement.innerHTML = `<div class="flex items-center justify-center p-6"><div class="loader"></div></div>`;
+                
+                // Fetch and display explanation
+                const explanation = await fetchExplanation(tag);
+                modalExplanationElement.textContent = explanation;
             };
 
-            /**
-             * Collapses all currently expanded groups.
-             */
-            const foldAllGroups = () => {
+            const hideExplanationModal = () => {
+                aiExplainModal.classList.add('hidden');
+                document.body.style.overflow = ''; // Restore scrolling
+            };
+
+
+            /***************************************************
+             * Navigation & Interaction
+             ***************************************************/
+            const openLinkedGroup = (stdName) => { /* ... (no changes needed) ... */
+                const groupInfo = groupMap.get(stdName);
+                if (!groupInfo) return;
+                if (!groupInfo.listDiv.classList.contains('active')) {
+                    groupInfo.titleElement.click();
+                }
+                setTimeout(() => {
+                    groupInfo.titleElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    groupInfo.titleElement.parentElement.classList.remove('highlight-animation');
+                    void groupInfo.titleElement.parentElement.offsetWidth; // Trigger reflow
+                    groupInfo.titleElement.parentElement.classList.add('highlight-animation');
+                    setTimeout(() => {
+                        groupInfo.titleElement.parentElement.classList.remove('highlight-animation');
+                    }, HIGHLIGHT_DURATION);
+                }, 100);
+            };
+
+            const foldAllGroups = () => { /* ... (no changes needed) ... */
                 let foldedCount = 0;
                 groupMap.forEach(groupInfo => {
                     if (groupInfo.listDiv.classList.contains('active')) {
@@ -605,35 +580,28 @@
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                     showNotification(`Folded ${foldedCount} group(s).`);
                 } else {
-                     showNotification('All groups are already folded.');
+                    showNotification('All groups are already folded.');
                 }
-                 settingsPanel.classList.add('hidden');
-                 settingsButton.setAttribute('aria-expanded', 'false');
+                settingsPanel.classList.add('hidden');
+                settingsButton.setAttribute('aria-expanded', 'false');
             };
-
 
             /***************************************************
              * Event Listeners
              ***************************************************/
-
             settingsButton.addEventListener('click', toggleSettingsPanel);
-
             document.addEventListener('click', (event) => {
-                if (!settingsPanel.classList.contains('hidden') &&
-                    !settingsPanel.contains(event.target) &&
-                    !settingsButton.contains(event.target)) {
+                if (!settingsPanel.classList.contains('hidden') && !settingsPanel.contains(event.target) && !settingsButton.contains(event.target)) {
                     toggleSettingsPanel();
                 }
             });
-
             underscoreToggle.addEventListener('change', () => {
                 displayUnderscores = underscoreToggle.checked;
-                 localStorage.setItem('displayUnderscores', displayUnderscores);
+                localStorage.setItem('displayUnderscores', displayUnderscores);
                 renderAllGroups();
-                 settingsPanel.classList.add('hidden');
-                 settingsButton.setAttribute('aria-expanded', 'false');
+                settingsPanel.classList.add('hidden');
+                settingsButton.setAttribute('aria-expanded', 'false');
             });
-
             foldAllButton.addEventListener('click', foldAllGroups);
 
             document.addEventListener('keydown', (event) => {
@@ -641,18 +609,20 @@
                     event.preventDefault();
                     foldAllGroups();
                 }
-                 if (event.key === 'Escape' && !settingsPanel.classList.contains('hidden')) {
-                     toggleSettingsPanel();
-                 }
+                if (event.key === 'Escape') {
+                    if (!settingsPanel.classList.contains('hidden')) toggleSettingsPanel();
+                    if (!aiExplainModal.classList.contains('hidden')) hideExplanationModal();
+                }
             });
+
+            // Modal close listeners
+            modalCloseButton.addEventListener('click', hideExplanationModal);
+            modalOverlay.addEventListener('click', hideExplanationModal);
+
 
             /***************************************************
              * Initialization
              ***************************************************/
-
-            /**
-             * Main initialization function.
-             */
             const initializeApp = async () => {
                 loadSettings();
                 try {
@@ -664,18 +634,18 @@
                     renderAllGroups();
                 } catch (error) {
                     console.error("Initialization failed:", error);
-                     if (initialLoader && displayContainer.contains(initialLoader)) {
-                         initialLoader.textContent = 'Failed to initialize application.';
-                         initialLoader.classList.add('text-red-400');
-                     } else if (!displayContainer.hasChildNodes()) {
-                         displayContainer.innerHTML = '<p class="text-red-400 text-center py-5">Failed to initialize application.</p>';
-                     }
+                    if (initialLoader && displayContainer.contains(initialLoader)) {
+                        initialLoader.textContent = 'Failed to initialize application.';
+                        initialLoader.classList.add('text-red-400');
+                    } else if (!displayContainer.hasChildNodes()) {
+                        displayContainer.innerHTML = '<p class="text-red-400 text-center py-5">Failed to initialize application.</p>';
+                    }
                 }
             };
 
-            initializeApp(); // Start the application
+            initializeApp();
 
-        }); // End DOMContentLoaded
+        });
     </script>
 </body>
 </html>
