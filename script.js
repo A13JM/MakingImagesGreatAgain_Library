@@ -33,8 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
      ***************************************************/
     const fetchExplanation = async (tag) => {
         // --- Vercel Backend Method ---
-        // Uncomment this block if you are using the Vercel backend.
-        /*
+        
         try {
             const response = await fetch('/api/explain', {
                 method: 'POST',
@@ -50,32 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to fetch explanation:', error);
             return `Error: ${error.message}`;
         }
-        */
-
-        // --- Pipedream Backend Method (or other simple webhook) ---
-        // This is the active method. Remember to replace the URL.
-        const WORKFLOW_URL = "YOUR_PIPEDREAM_OR_WEBHOOK_URL_HERE";
-        if (WORKFLOW_URL === "YOUR_PIPEDREAM_OR_WEBHOOK_URL_HERE") {
-             return "Error: The backend URL has not been set in script.js.";
-        }
-        try {
-            const response = await fetch(WORKFLOW_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tag: tag })
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error || 'The workflow returned an error.');
-            }
-            return data.explanation;
-        } catch (error) {
-            console.error('Failed to fetch explanation from workflow:', error);
-            return `Error: ${error.message}`;
-        }
-    };
-
-
+        
     /***************************************************
      * Utility Functions
      ***************************************************/
