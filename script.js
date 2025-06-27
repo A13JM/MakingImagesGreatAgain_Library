@@ -29,6 +29,26 @@ document.addEventListener('DOMContentLoaded', () => {
     let notificationTimeout = null;
 
     /***************************************************
+     * Icon Creation
+     ***************************************************/
+    const createGoogleSparkleIcon = () => {
+        const wrapper = document.createElement('div');
+        // Add pointer-events-none so the icon doesn't block the button's click event
+        wrapper.className = 'gemini-icon-wrapper pointer-events-none'; 
+        
+        // The full SVG for the animated icon
+        wrapper.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="gem-secondary-sparkle" d="M3.75 9.75L5.25 6.75L8.25 5.25L5.25 3.75L3.75 0.75L2.25 3.75L-0.75 5.25L2.25 6.75L3.75 9.75Z" transform="translate(4, 3)"/>
+                <path class="gem-secondary-sparkle" d="M3 6L4 4L6 3L4 2L3 0L2 2L0 3L2 4L3 6Z" transform="translate(15, 15)"/>
+                <path class="gem-secondary-sparkle" d="M3 6L4 4L6 3L4 2L3 0L2 2L0 3L2 4L3 6Z" transform="translate(1, 15)"/>
+                <path class="gem-main-sparkle" d="M12 18L14.25 12.75L19.5 10.5L14.25 8.25L12 3L9.75 8.25L4.5 10.5L9.75 12.75L12 18Z"/>
+            </svg>
+        `;
+        return wrapper;
+    };
+    
+    /***************************************************
      * AI Explanation Modal Logic
      ***************************************************/
     const fetchExplanation = async (tag) => {
@@ -285,10 +305,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const buttonGroup = document.createElement('div');
             buttonGroup.className = 'flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200';
             
-            const explainButton = document.createElement('button');
-            explainButton.className = 'p-1.5 rounded-full text-gray-400 hover:bg-white/10 hover:text-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors transform hover:scale-110';
+                       const explainButton = document.createElement('button');
+            // We adjust padding slightly to better fit the new icon's wrapper
+            explainButton.className = 'p-1 rounded-full text-gray-400 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors';
             explainButton.title = `Explain "${text}" with AI`;
-            explainButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/sparkles.svg" alt="Explain" class="w-5 h-5"/>`;
+            
+            // --- The Key Change ---
+            // Remove the old icon and append our new animated one
+            explainButton.innerHTML = ''; // Clear the button
+            explainButton.appendChild(createGoogleSparkleIcon()); // Add the new SVG icon
+
             explainButton.onclick = (e) => { e.stopPropagation(); showExplanationModal(text); };
             buttonGroup.appendChild(explainButton);
 
