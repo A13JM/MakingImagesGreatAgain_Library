@@ -22,7 +22,8 @@
             "contemporary",
             "enmaided",
             "costume_combination",
-            "cosplay"
+            "cosplay",
+            "(for_instructions_about_specific_\"cosplays\"_of_characters,_see_the_cosplay_tag)"
         ],
         "Changes_of_specific_clothes_or_accessories": [
             "alternate_headwear",
@@ -86,7 +87,9 @@
             "genderswap",
             "genderswap_(mtf)",
             "genderswap_(ftm)",
+            "(for_a_list_of_specific_\"genderswapped\"_characters,_see_list_of_genderswap_characters)",
             "if_they_mated",
+            "(for_a_list_of_specific_\"if_they_mated\"_characters,_see_the_if_they_mated_tag)",
             "alternate_universe"
         ],
         "See_also": [
@@ -190,9 +193,9 @@
             "multiple_4koma",
             "5koma",
             "borderless_panels",
-            "manga",
-            "left-to-right_manga",
-            "right-to-left_comic",
+            "manga_(Japanese_term_for_comic_books)",
+            "left-to-right_manga_(LTR_Japanese/Chinese_works)",
+            "right-to-left_comic_(RTL_Western/Korean_works)",
             "silent_comic",
             "corrupted_file",
             "corrupted_Twitter_file",
@@ -454,6 +457,14 @@
             "Tag_Group:Drawing_Software",
             "bromide"
         ],
+        "External_links": [
+            "Traditional_Japanese_Patterns",
+            "https://japan-avenue.com/blogs/japan/japanese-patterns",
+            "https://www.nippon.com/en/japan-data/h00478/traditional-japanese-patterns.html",
+            "https://olafolsson.com/blogs/blog-1/wagara-traditional-japanese-patterns-and-designs",
+            "https://kirikomade.com/blogs/our-fabrics/japanese-patterns-1",
+            "https://kirikomade.com/blogs/our-fabrics/japanese-patterns-2"
+        ]
     },
     "Tag group:Backgrounds": {
         "About": [
@@ -558,7 +569,7 @@
             "censored_nipples",
             "censored_clitoris",
             "censored_testicles",
-            "censored_urethra",
+            "censored_urethra_(aka_censored_urethra)",
             "Non-sexual_censorship",
             "censored_gesture",
             "censored_poop",
@@ -567,8 +578,7 @@
             "censored_text",
             "redaction",
             "censored_violence",
-            "fake_censor",
-            "unnecessary_censor",
+            "fake_censor_(aka_unnecessary_censor)",
             "bubble_filter",
             "censored_eyebrows",
             "censored_feet",
@@ -587,7 +597,7 @@
             "censored_nipples",
             "censored_clitoris",
             "censored_testicles",
-            "censored_urethra",
+            "censored_urethra_(aka_censored_urethra)",
             "Non-sexual_censorship",
             "censored_gesture",
             "censored_poop",
@@ -596,7 +606,7 @@
             "censored_text",
             "redaction",
             "censored_violence",
-            "fake_censor",
+            "fake_censor_(aka_unnecessary_censor)",
             "bubble_filter",
             "censored_eyebrows",
             "censored_feet",
@@ -610,7 +620,7 @@
         "Visual_forms_of_censorship": [
             "blood_censor",
             "censored_with_cum",
-            "convenient_censoring",
+            "convenient_censoring_(See_also:_convenient_uncensoring)",
             "convenient_arm",
             "convenient_head",
             "convenient_leg",
@@ -618,11 +628,11 @@
             "steam_censor",
             "feather_censor",
             "fire_censor",
-            "flower_censor",
+            "flower_censor_(May_also_be_non-diegetic)",
             "petal_censor",
             "food_censor",
-            "hair_censor",
-            "light_censor",
+            "hair_censor_(See_also:_head_hair_over_body)",
+            "light_censor_(May_also_be_non-diegetic)",
             "necklace_censor",
             "one_finger_selfie_challenge",
             "ribbon_censor",
@@ -755,9 +765,9 @@
             "moonlight",
             "spotlight",
             "stage_lights",
-            "caustics",
+            "caustics_|__(underwater_light)_|_(post_#4150718)",
             "crack_of_light",
-            "refraction",
+            "refraction_|_(post_#5527065)",
             "light_rays",
             "dim_lighting"
         ],
@@ -788,17 +798,17 @@
             "lantern",
             "oil_lamp",
             "wooden_lantern",
-            "ceiling_light",
-            "chandelier",
-            "candlelight"
+            "ceiling_light__|_(post_#4418507)",
+            "chandelier_|_(post_#1190295)",
+            "candlelight_|_(post_#3782254)"
         ],
         "Misc": [
-            "muzzle_flash",
-            "headlight",
+            "muzzle_flash_|__(post_#7581880)",
+            "headlight_|_(post_#7627947)",
             "floodlights",
-            "flare",
-            "ultraviolet_light",
-            "glowing_headgear"
+            "flare__|__(post_#7246932)",
+            "ultraviolet_light__|__(post_#3308935)",
+            "glowing_headgear_|__(post_#4609650)"
         ],
         "Absence_of_light": [
             "shade",
@@ -865,7 +875,7 @@
         "Patterned_things": [
             "patterned_hair",
             "patterned_clothing",
-            "patterned",
+            "patterned_(for_unique_patterns_with_no_name)",
             "patterned_background"
         ],
         "Print_items": [
@@ -925,15 +935,15 @@
             "3.22_Z",
             "4._See_also",
             "retro_artstyle",
-            "1920s",
-            "1930s",
+            "1920s_|_(post_#7050932)",
+            "1930s_|_(post_#6629847)",
             "1940s",
-            "1950s",
+            "1950s_|_(post_#2534256)",
             "1960s",
-            "1970s",
-            "1980s",
-            "1990s",
-            "2000s",
+            "1970s_|_(post_#1337863)",
+            "1980s_|_(post_#7633617)",
+            "1990s_|_(post_#7603863)",
+            "2000s_|_(post_#2644)",
             "Animification",
             "Art_Nouveau",
             "Pinup",
