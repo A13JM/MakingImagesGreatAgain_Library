@@ -1,103 +1,30 @@
-/* --- Google AI Design System --- */
-
-:root {
-    /* Color Palette */
-    --bg-primary: #0f172a;       /* slate-900 */
-    --surface: #1e293b;        /* slate-800 */
-    --border-default: #334155;   /* slate-700 */
-    --hover: #ffffff1A;        /* white at 10% opacity */
-    
-    --text-primary: #e2e8f0;     /* slate-200 */
-    --text-secondary: #94a3b8;   /* slate-400 */
-    
-    --accent: #3b82f6;           /* blue-500 */
-    --accent-secondary: #60a5fa; /* blue-400 */
-    --accent-hover: #2563eb;     /* blue-600 */
-    
-    --success: #10b981;          /* emerald-500 */
-    --success-bg: #059669;       /* emerald-600 */
-
-    --on-primary-bg: #0f172a;    /* For notification text */
-    --notification-bg: #f8fafc; /* For notification bg */
-
-    /* Google Brand Colors */
-    --gem-blue: #4285F4;
-    --gem-red: #DB4437;
-    --gem-yellow: #F4B400;
-    --gem-green: #0F9D58;
-
-    /* Base Typography */
-    font-family: 'Inter', sans-serif;
-}
-
+/* --- Base Styles --- */
 body {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- Components --- */
-
-/* Buttons */
-.button-icon-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem; /* p-2 */
-    border-radius: 9999px; /* rounded-full */
-    color: var(--text-secondary);
-    transition: background-color 0.2s, color 0.2s;
-}
-.button-icon-secondary:hover {
-    background-color: var(--hover);
-    color: var(--text-primary);
-}
-.button-icon-secondary:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-}
-.is-close-button {
-    color: var(--text-secondary);
-    background-color: transparent;
-}
-.is-close-button:hover {
-    background-color: var(--hover);
+body, .bg-transition {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
-
-/* Cards / Groups */
-.group-card {
-    background-color: var(--surface);
-    border: 1px solid var(--border-default);
-    border-radius: 0.75rem; /* rounded-xl */
-    overflow: hidden;
-    transition: border-color 0.2s;
-}
-.group-card:hover {
-    border-color: #475569; /* slate-600 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.group-title {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.25rem;
-    text-align: left;
-    font-weight: 500;
-    font-size: 1.125rem; /* text-lg */
-    color: var(--text-primary);
-    transition: background-color 0.2s;
+main {
+    animation: fadeIn 0.5s ease-out forwards;
 }
-.group-title:hover {
-    background-color: var(--hover);
+
+@keyframes highlight-bg-dark {
+    0% { background-color: #4f46e5; } /* indigo-600 */
+    100% { background-color: transparent; }
 }
-.group-title .chevron-icon {
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.group-title[aria-expanded="true"] .chevron-icon {
-    transform: rotate(180deg);
+
+.highlight-animation {
+    animation: highlight-bg-dark 1.5s ease-out;
 }
 
 .list-container {
@@ -105,103 +32,136 @@ body {
     overflow: hidden;
     transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out 0.1s;
     opacity: 0;
-    border-top: 1px solid var(--border-default);
 }
 .list-container.active {
     max-height: 5000px;
     opacity: 1;
     overflow: visible;
+    transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out;
 }
-
-/* List Items */
-.list-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem; /* gap-2 */
-    padding: 0.75rem 1rem; /* p-3 */
-    border-radius: 0.5rem; /* rounded-lg */
-    transition: background-color 0.2s;
-}
-.list-item:hover {
-    background-color: var(--hover);
-}
-.list-item.copied-success {
-    background-color: var(--success-bg) !important;
-}
-
-/* --- Animations --- */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-main { animation: fadeIn 0.5s ease-out forwards; }
 
 .loader {
-     border: 4px solid var(--border-default);
-     border-top: 4px solid var(--accent-secondary);
+     border: 4px solid #4b5563; /* gray-600 */
+     border-top: 4px solid #818cf8; /* indigo-400 */
      border-radius: 50%;
      width: 24px;
      height: 24px;
      animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* --- Header & Page Layout --- */
-.page-header {
-    text-align: center;
-    padding: 3rem 1rem 4rem 1rem;
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
 }
-.page-header .gemini-icon-wrapper {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 1.5rem auto;
+::-webkit-scrollbar-track {
+     background: #1f2937; /* gray-800 */
 }
-.page-header .gemini-icon-wrapper .gem-main-sparkle,
-.page-header .gemini-icon-wrapper .gem-secondary-sparkle {
-    animation-play-state: running !important; /* Ensure header icon always animates */
+::-webkit-scrollbar-thumb {
+     background-color: #6366f1; /* indigo-500 */
+     border-radius: 4px;
+     border: 2px solid #1f2937; /* gray-800 */
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: #818cf8; /* indigo-400 */
 }
 
-/* --- Gemini Icon Styles & Animations --- */
-:root { --gem-blue: #4285F4; --gem-red: #DB4437; --gem-yellow: #F4B400; --gem-green: #0F9D58; }
+.copied-success {
+    background-color: #047857 !important; /* emerald-700 */
+    transition: background-color 0.1s ease-in-out;
+}
 
-.gemini-icon-wrapper { width: 28px; height: 28px; }
+/* --- Google-style AI Icon & Modal Styles --- */
 
-@keyframes gem-grow-rotate { from { transform: scale(0.5) rotate(-180deg); opacity: 0; } to { transform: scale(1) rotate(0deg); opacity: 1; } }
-@keyframes gem-burst { 0% { transform: scale(0); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1.2); opacity: 0; } }
-@keyframes gem-spin-loading { from { transform: rotate(0deg) scale(1); } to { transform: rotate(360deg) scale(1); } }
+:root {
+    --gem-blue: #4285F4;
+    --gem-red: #DB4437;
+    --gem-yellow: #F4B400;
+    --gem-green: #0F9D58;
+}
 
-.gemini-icon-wrapper .gem-main-sparkle { fill: var(--gem-blue); transform-origin: center; transform: scale(1) rotate(0deg); }
-.gemini-icon-wrapper .gem-secondary-sparkle { transform-origin: center; transform: scale(0); opacity: 0; }
-
-.group:hover .gemini-icon-wrapper .gem-main-sparkle, .is-header-icon .gem-main-sparkle { animation: gem-grow-rotate 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-.group:hover .gemini-icon-wrapper .gem-secondary-sparkle, .is-header-icon .gem-secondary-sparkle { animation: gem-burst 1.2s ease-out infinite; }
-.group:hover .gemini-icon-wrapper .gem-secondary-sparkle:nth-child(2), .is-header-icon .gem-secondary-sparkle:nth-child(2) { animation-delay: 0s; fill: var(--gem-blue); }
-.group:hover .gemini-icon-wrapper .gem-secondary-sparkle:nth-child(3), .is-header-icon .gem-secondary-sparkle:nth-child(3) { animation-delay: 0.2s; fill: var(--gem-red); }
-.group:hover .gemini-icon-wrapper .gem-secondary-sparkle:nth-child(4), .is-header-icon .gem-secondary-sparkle:nth-child(4) { animation-delay: 0.4s; fill: var(--gem-yellow); }
-
-.gemini-icon-wrapper.loading .gem-main-sparkle { animation: gem-spin-loading 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
-.gemini-icon-wrapper.loading .gem-secondary-sparkle { animation: none; opacity: 0; transition: opacity 0.2s ease-out; }
-
-/* --- Modal & Notification Styles --- */
+/* Modal Animations */
 #aiExplainModal.hidden { display: none; }
 #aiExplainModal { animation: modal-fade-in 0.3s ease forwards; }
 #aiExplainModal .modal-content { animation: modal-content-in 0.3s ease forwards; }
+
 @keyframes modal-fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes modal-content-in { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes modal-content-in {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
 
-#modalExplanation { opacity: 0; transform: translateY(-10px); transition: opacity 0.4s ease-out, transform 0.4s ease-out; }
-#modalExplanation.visible { opacity: 1; transform: translateY(0); }
+/* Icon Animations */
+@keyframes gem-grow-rotate {
+    from { transform: scale(0.5) rotate(-180deg); opacity: 0; }
+    to { transform: scale(1) rotate(0deg); opacity: 1; }
+}
 
-.modal-header-gradient { background: linear-gradient(to bottom, #334155, #1e293b); } /* slate-700 to slate-800 */
+@keyframes gem-burst {
+    0% { transform: scale(0); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: scale(1.2); opacity: 0; }
+}
 
-#notification { background-color: var(--notification-bg); color: var(--on-primary-bg); }
+/* Icon Container */
+.gemini-icon-wrapper { width: 28px; height: 28px; }
 
-/* --- Scrollbar --- */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: var(--bg-primary); }
-::-webkit-scrollbar-thumb { background-color: var(--border-default); border-radius: 5px; border: 2px solid var(--bg-primary); }
-::-webkit-scrollbar-thumb:hover { background-color: #475569; /* slate-600 */ }
+/* Static state of the icon parts */
+.gemini-icon-wrapper .gem-main-sparkle {
+    fill: var(--gem-blue);
+    transform-origin: center;
+    transform: scale(1) rotate(0deg);
+}
+.gemini-icon-wrapper .gem-secondary-sparkle {
+    transform-origin: center;
+    transform: scale(0);
+    opacity: 0;
+}
+
+/* Apply the animation ONLY when hovering the parent .group (the li) */
+.group:hover .gemini-icon-wrapper .gem-main-sparkle {
+    animation: gem-grow-rotate 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.group:hover .gemini-icon-wrapper .gem-secondary-sparkle {
+    animation: gem-burst 1.2s ease-out infinite;
+}
+.group:hover .gemini-icon-wrapper .gem-secondary-sparkle:nth-child(2) { animation-delay: 0s; fill: var(--gem-blue); }
+.group:hover .gemini-icon-wrapper .gem-secondary-sparkle:nth-child(3) { animation-delay: 0.2s; fill: var(--gem-red); }
+.group:hover .gemini-icon-wrapper .gem-secondary-sparkle:nth-child(4) { animation-delay: 0.4s; fill: var(--gem-yellow); }
+
+/* Custom non-linear loading spin */
+@keyframes gem-spin-loading {
+    from { transform: rotate(0deg) scale(1); }
+    to { transform: rotate(360deg) scale(1); }
+}
+
+/* Apply loading animation when .loading class is present */
+.gemini-icon-wrapper.loading .gem-main-sparkle {
+    animation: gem-spin-loading 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+.gemini-icon-wrapper.loading .gem-secondary-sparkle {
+    animation: none;
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+}
+
+/* Explanation Text Animation */
+#modalExplanation {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+#modalExplanation.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Other Modal Styles */
+.modal-header-gradient {
+    background: linear-gradient(to bottom, #334155, #1e293b); /* slate-700 to slate-800 */
+}
