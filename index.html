@@ -4,20 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Danbooru Tag Search</title>
-    
+
     <!-- Link to Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Link to your new CSS file -->
-    <link rel="stylesheet" href="style.css">
-    
-    <!-- Link to Tailwind CSS (still needed for utility classes) -->
+
+    <!-- Link to Tailwind CSS for utility classes -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Link to your new JavaScript file (using defer is a best practice) -->
-    <script src="script.js" defer></script>
+
+    <!-- Link to your new external CSS file -->
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col bg-transition">
@@ -63,20 +60,27 @@
     <!-- AI Explanation Modal -->
     <div id="aiExplainModal" class="hidden fixed inset-0 bg-black/60 z-[101] flex items-center justify-center p-4">
         <div id="modalOverlay" class="absolute inset-0"></div>
-        <div class="modal-content relative bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md m-4">
-            <div class="flex items-center justify-between p-4 border-b border-gray-700">
-                <div class="flex items-center gap-2">
-                    <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/sparkles.svg" alt="AI" class="w-5 h-5 text-indigo-400"/>
+        <div class="modal-content relative bg-slate-800 border border-slate-700/80 rounded-xl shadow-2xl w-full max-w-md m-4">
+            <div class="modal-header-gradient flex items-center justify-between p-4 border-b border-slate-700/60 rounded-t-xl">
+                <div class="flex items-center gap-3">
+                    <div class="gemini-icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path class="gem-secondary-sparkle" d="M3.75 9.75L5.25 6.75L8.25 5.25L5.25 3.75L3.75 0.75L2.25 3.75L-0.75 5.25L2.25 6.75L3.75 9.75Z" transform="translate(4, 3)"/>
+                            <path class="gem-secondary-sparkle" d="M3 6L4 4L6 3L4 2L3 0L2 2L0 3L2 4L3 6Z" transform="translate(15, 15)"/>
+                            <path class="gem-secondary-sparkle" d="M3 6L4 4L6 3L4 2L3 0L2 2L0 3L2 4L3 6Z" transform="translate(1, 15)"/>
+                            <path class="gem-main-sparkle" d="M12 18L14.25 12.75L19.5 10.5L14.25 8.25L12 3L9.75 8.25L4.5 10.5L9.75 12.75L12 18Z"/>
+                        </svg>
+                    </div>
                     <h3 class="text-lg font-semibold text-gray-100">Tag Explanation</h3>
                 </div>
-                <button id="modalCloseButton" class="p-1 rounded-full text-gray-500 hover:bg-white/10 hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button id="modalCloseButton" class="p-1.5 rounded-full text-gray-400 hover:bg-white/10 hover:text-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 focus:ring-offset-slate-800">
                     <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/x.svg" alt="Close" class="w-5 h-5"/>
                 </button>
             </div>
             <div class="p-5">
                 <div class="flex items-center gap-2 mb-3">
                     <span class="text-sm text-gray-400">Tag:</span>
-                    <code id="modalTag" class="px-2 py-1 bg-gray-700 rounded-md text-indigo-300 font-mono text-sm"></code>
+                    <code id="modalTag" class="px-2 py-1 bg-slate-700/80 rounded-md text-indigo-300 font-mono text-sm"></code>
                 </div>
                 <div id="modalExplanation" class="text-gray-300 leading-relaxed">
                     <!-- Loader will be injected here -->
@@ -84,6 +88,8 @@
             </div>
         </div>
     </div>
-
+    
+    <!-- Link to your new external JavaScript file -->
+    <script src="script.js"></script>
 </body>
 </html>
