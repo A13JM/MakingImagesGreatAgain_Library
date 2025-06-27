@@ -79,14 +79,23 @@ document.addEventListener('DOMContentLoaded', () => {
     /***************************************************
      * Data Fetching and Filtering
      ***************************************************/
-    const fetchJsonData = async () => { /* ... No changes needed here ... */
+    const fetchJsonData = async () => {
         try {
             const response = await fetch(jsonUrl);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             return await response.json();
-        } catch (error) { console.error('Error fetching JSON data:', error); throw error; }
+        } catch (error) {
+            console.error('Error fetching JSON data:', error);
+            showNotification(`Error loading tags: ${error.message}`);
+            if (initialLoader) {
+                initialLoader.textContent = 'Failed to load tag data. Please try again later.';
+                initialLoader.classList.add('text-red-400');
+            }
+            throw error;
+        }
     };
-    const filterData = (data) => { /* ... No changes needed here ... */
+
+    const filterData = (data) => {
         const tagGroupStr = 'tag groups';
         if (Array.isArray(data)) {
             const filteredArray = data.map(item => filterData(item)).filter(item => item !== null && standardizeName(String(item)) !== tagGroupStr);
@@ -99,7 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (filteredValue !== null) filteredObject[key] = filteredValue;
             }
             return Object.keys(filteredObject).length > 0 ? filteredObject : null;
-        } else if (typeof data === 'string') { return standardizeName(data) === tagGroupStr ? null : data; }
+        } else if (typeof data === 'string') {
+            return standardizeName(data) === tagGroupStr ? null : data;
+        }
         return data;
     };
 
@@ -110,13 +121,13 @@ document.addEventListener('DOMContentLoaded', () => {
         displayContainer.innerHTML = '';
         groupMap.clear();
         if (!globalJsonData || Object.keys(globalJsonData).length === 0) {
-            displayContainer.innerHTML = '<p class="text-secondary text-center py-5">No tag groups found.</p>';
+            displayContainer.innerHTML = '<p class="text-gray-400 text-center py-5">No tag groups found.</p>';
             return;
         }
         const fragment = document.createDocumentFragment();
         for (const [key, value] of Object.entries(globalJsonData)) {
             const categoryDiv = document.createElement('div');
-            categoryDiv.className = 'group-card';
+            categoryDiv.className = 'bg-gray-800/60 rounded-xl border border-gray-700/80 shadow-sm overflow-hidden bg-transition';
             renderGroup(key, value, categoryDiv, true);
             fragment.appendChild(categoryDiv);
         }
@@ -124,39 +135,50 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const renderGroup = (groupKey, groupValue, parentElement, isTopLevel) => {
-        const stdKey = standardizeName(groupKey);
+        const groupId = `group-${standardizeName(groupKey).replace(/\s+/g, '-')}`;
+        const listId = `${groupId}-list`;
 
         const titleButton = document.createElement('button');
-        titleButton.className = 'group-title';
+        titleButton.className = `w-full flex justify-between items-center p-4 text-left font-medium ${isTopLevel ? 'text-lg text-gray-100' : 'text-base text-gray-200'} hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 rounded-t-lg bg-transition transition-colors`;
         titleButton.setAttribute('aria-expanded', 'false');
+        titleButton.setAttribute('aria-controls', listId);
+
         titleButton.innerHTML = `
-            <span class="${isTopLevel ? '' : 'text-base text-slate-300'}">${transformNameForDisplay(groupKey)}</span>
-            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevron-down.svg" alt="Expand" class="w-5 h-5 text-secondary chevron-icon"/>
+            <span>${transformNameForDisplay(groupKey)}</span>
+            <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevron-down.svg" alt="Expand" class="w-5 h-5 transform transition-transform duration-300 text-gray-400 chevron-icon"/>
         `;
 
         const listContainer = document.createElement('div');
-        listContainer.className = 'list-container';
+        listContainer.className = 'list-container border-t border-gray-700/80 bg-gray-800/60 bg-transition';
+        listContainer.id = listId;
 
         parentElement.appendChild(titleButton);
         parentElement.appendChild(listContainer);
 
+        const stdKey = standardizeName(groupKey);
         groupMap.set(stdKey, { titleElement: titleButton, listDiv: listContainer, value: groupValue, isRendered: false });
 
         titleButton.addEventListener('click', () => {
             const isExpanded = listContainer.classList.contains('active');
-            titleButton.setAttribute('aria-expanded', String(!isExpanded));
-            listContainer.classList.toggle('active');
-            
-            const groupInfo = groupMap.get(stdKey);
-            if (!isExpanded && groupInfo && !groupInfo.isRendered) {
-                renderGroupContent(groupInfo.value, listContainer);
-                groupInfo.isRendered = true;
+            titleButton.setAttribute('aria-expanded', !isExpanded);
+            const chevronIcon = titleButton.querySelector('.chevron-icon');
+            if (!isExpanded) {
+                listContainer.classList.add('active');
+                chevronIcon.style.transform = 'rotate(180deg)';
+                const groupInfo = groupMap.get(stdKey);
+                if (groupInfo && !groupInfo.isRendered) {
+                    renderGroupContent(groupInfo.value, listContainer);
+                    groupInfo.isRendered = true;
+                }
+            } else {
+                listContainer.classList.remove('active');
+                chevronIcon.style.transform = 'rotate(0deg)';
             }
         });
     };
 
     const renderGroupContent = (value, container) => {
-        container.innerHTML = `<div class="p-4"><div class="loader mx-auto"></div></div>`;
+        container.innerHTML = `<div class="flex items-center justify-center p-4"><div class="loader !w-5 !h-5"></div><span class="ml-2 text-sm text-gray-400">Loading...</span></div>`;
         setTimeout(() => {
             container.innerHTML = '';
             if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
@@ -167,27 +189,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         renderListItems(subValue, container); hasContent = true;
                     } else {
                         const subDiv = document.createElement('div');
-                        subDiv.className = 'm-4 mt-0 p-3 border border-default rounded-lg bg-primary';
+                        subDiv.className = 'my-2 mx-3 p-2 border border-gray-700/70 rounded-lg bg-gray-700/30';
                         renderGroup(subKey, subValue, subDiv, false);
                         subFragment.appendChild(subDiv); hasContent = true;
                     }
                 }
                 if (subFragment.childNodes.length > 0) container.appendChild(subFragment);
-                else if (!hasContent) container.innerHTML = '<p class="text-secondary text-center p-4">No items in this group.</p>';
+                else if (!hasContent) container.innerHTML = '<p class="p-3 text-sm text-gray-500">No items in this group.</p>';
             } else if (Array.isArray(value) || typeof value === 'string') {
                 renderListItems(Array.isArray(value) ? value : [value], container);
             } else {
-                container.innerHTML = '<p class="text-secondary text-center p-4">No items in this group.</p>';
+                container.innerHTML = '<p class="p-3 text-sm text-gray-500">No items in this group.</p>';
             }
         }, 50);
     };
     
     const renderListItems = (items, container) => {
         if (!items || items.length === 0) {
-            container.innerHTML = '<p class="text-secondary text-center p-4">No items.</p>'; return;
+            container.innerHTML = '<p class="p-4 text-sm text-gray-500">No items.</p>'; return;
         }
         const listElement = document.createElement('ul');
-        listElement.className = 'p-2 space-y-1';
+        listElement.className = 'p-2';
         container.appendChild(listElement);
 
         if (items.length > CHUNK_SIZE) {
@@ -202,13 +224,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const createListItem = (text) => {
         const li = document.createElement('li');
         const standardized = standardizeName(text);
-        li.className = 'list-item group';
+        li.className = 'flex items-center justify-between gap-2 group p-2 rounded-lg hover:bg-white/5 transition-colors';
 
         if (groupMap.has(standardized)) {
             li.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/link-2.svg" alt="Link" class="w-4 h-4 text-accent-secondary">
-                    <button class="text-accent-secondary hover:text-accent hover:underline" data-link-name="${standardized}">${transformNameForDisplay(text)}</button>
+                <div class="flex items-center gap-2">
+                    <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/link-2.svg" alt="Link" class="w-4 h-4 text-indigo-400">
+                    <button class="text-indigo-400 hover:underline focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded px-1 py-0.5" data-link-name="${standardized}">${transformNameForDisplay(text)}</button>
                 </div>
             `;
         } else {
@@ -216,22 +238,22 @@ document.addEventListener('DOMContentLoaded', () => {
             li.title = `Click to copy "${text}"`;
             
             const tagSpan = document.createElement('span');
-            tagSpan.className = 'flex-grow truncate select-none text-primary';
+            tagSpan.className = 'flex-grow truncate select-none text-gray-300';
             tagSpan.textContent = transformNameForDisplay(text);
             
             const buttonGroup = document.createElement('div');
             buttonGroup.className = 'flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200';
 
             const explainButton = document.createElement('button');
-            explainButton.className = 'button-icon-secondary';
+            explainButton.className = 'p-1 rounded-full text-gray-400 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors';
             explainButton.title = `Explain "${text}" with AI`;
             explainButton.appendChild(createGoogleSparkleIcon());
             explainButton.onclick = (e) => { e.stopPropagation(); showExplanationModal(text); };
             
             const searchButton = document.createElement('button');
-            searchButton.className = 'button-icon-secondary';
+            searchButton.className = 'p-1.5 rounded-full text-gray-400 hover:bg-white/10 hover:text-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors transform hover:scale-110 search-btn';
             searchButton.title = `Search "${text}" on Danbooru`;
-            searchButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/search.svg" alt="Search" class="w-5 h-5"/>`;
+            searchButton.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/search.svg" alt="Search" class="w-5 h-5 pointer-events-none"/>`;
             searchButton.onclick = (e) => {
                 e.stopPropagation();
                 window.open(`https://danbooru.donmai.us/posts?tags=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
@@ -250,64 +272,94 @@ document.addEventListener('DOMContentLoaded', () => {
                     showNotification(`Copied: ${transformNameForDisplay(text)}`);
                     li.classList.add('copied-success');
                     setTimeout(() => { li.classList.remove('copied-success'); }, COPY_FEEDBACK_DURATION);
-                } catch (err) { showNotification('Failed to copy tag.'); }
+                } catch (err) {
+                    showNotification('Failed to copy tag.');
+                }
             });
         }
         return li;
     };
 
-    displayContainer.addEventListener('click', (e) => { /* ... No changes needed here ... */
-        if (e.target.dataset.linkName) { e.stopPropagation(); openLinkedGroup(e.target.dataset.linkName); }
+    displayContainer.addEventListener('click', (e) => {
+        if (e.target.dataset.linkName) {
+            e.stopPropagation();
+            openLinkedGroup(e.target.dataset.linkName);
+        }
     });
 
-    const renderChunkedList = (items, listElement, container) => { /* ... No changes needed here ... */
+    const renderChunkedList = (items, listElement, container) => {
         let currentIndex = 0;
         const loadMoreButton = document.createElement('button');
-        loadMoreButton.className = 'mt-3 w-full text-center px-4 py-2 text-sm font-medium rounded-md text-accent-secondary bg-accent/10 hover:bg-accent/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent focus:ring-offset-surface';
+        loadMoreButton.className = 'mt-3 w-full text-center px-4 py-2 text-sm font-medium rounded-md text-indigo-300 bg-indigo-900/50 hover:bg-indigo-800/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-800';
         const renderChunk = () => {
             const fragment = document.createDocumentFragment();
             const nextEnd = Math.min(currentIndex + CHUNK_SIZE, items.length);
             for (let i = currentIndex; i < nextEnd; i++) fragment.appendChild(createListItem(items[i]));
             listElement.appendChild(fragment);
             currentIndex = nextEnd;
-            if (currentIndex >= items.length) { loadMoreButton.remove(); } else { loadMoreButton.textContent = `Load More (${items.length - currentIndex} remaining)`; }
+            if (currentIndex >= items.length) {
+                loadMoreButton.remove();
+            } else {
+                loadMoreButton.textContent = `Load More (${items.length - currentIndex} remaining)`;
+            }
         };
         loadMoreButton.onclick = renderChunk;
         renderChunk();
-        if (currentIndex < items.length) { container.appendChild(loadMoreButton); loadMoreButton.textContent = `Load More (${items.length - CHUNK_SIZE} remaining)`; }
+        if (currentIndex < items.length) {
+            container.appendChild(loadMoreButton);
+            loadMoreButton.textContent = `Load More (${items.length - CHUNK_SIZE} remaining)`;
+        }
     };
     
     /***************************************************
      * AI Explanation Modal Logic
      ***************************************************/
-    const fetchExplanation = async (tag) => { /* ... No changes needed here ... */
+    const fetchExplanation = async (tag) => {
         try {
-            const response = await fetch('/api/explain', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: tag }) });
+            const response = await fetch('/api/explain', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tag: tag })
+            });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'The server returned an error.');
             return data.explanation;
-        } catch (error) { console.error('Failed to fetch explanation:', error); return `Error: ${error.message}`; }
+        } catch (error) {
+            console.error('Failed to fetch explanation:', error);
+            return `Error: ${error.message}`;
+        }
     };
     
     const showExplanationModal = async (tag) => {
+        // 1. Prepare the modal before showing it
         modalTagElement.textContent = tag;
+        
+        // 2. Reset the explanation container to be hidden and empty
         modalExplanationElement.classList.remove('visible');
         modalExplanationElement.textContent = ''; 
         
+        // 3. Find the icon in the modal header and start its loading animation
         const headerIcon = aiExplainModal.querySelector('.gemini-icon-wrapper');
         headerIcon.classList.add('loading');
 
+        // 4. Now, show the modal
         aiExplainModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
 
+        // 5. Fetch the explanation from the API
         const explanation = await fetchExplanation(tag);
         
+        // 6. Stop the loading animation on the header icon
         headerIcon.classList.remove('loading');
+        
+        // 7. Replace the empty content with the final text
         modalExplanationElement.textContent = explanation;
+        
+        // 8. Finally, trigger the text fade-in animation
         modalExplanationElement.classList.add('visible');
     };
 
-    const hideExplanationModal = () => { /* ... No changes needed here ... */
+    const hideExplanationModal = () => {
         aiExplainModal.classList.add('hidden');
         document.body.style.overflow = '';
     };
@@ -315,14 +367,35 @@ document.addEventListener('DOMContentLoaded', () => {
     /***************************************************
      * Navigation & Interaction
      ***************************************************/
-    const openLinkedGroup = (stdName) => { /* ... This function can be removed as we are not using the highlight animation for now ... */ };
-    const foldAllGroups = () => { /* ... No changes needed here ... */
+    const openLinkedGroup = (stdName) => {
+        const groupInfo = groupMap.get(stdName);
+        if (!groupInfo) return;
+        if (!groupInfo.listDiv.classList.contains('active')) {
+            groupInfo.titleElement.click();
+        }
+        setTimeout(() => {
+            const parentContainer = groupInfo.titleElement.parentElement;
+            parentContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            parentContainer.classList.remove('highlight-animation');
+            void parentContainer.offsetWidth;
+            parentContainer.classList.add('highlight-animation');
+        }, 100);
+    };
+
+    const foldAllGroups = () => {
         let foldedCount = 0;
         groupMap.forEach(groupInfo => {
-            if (groupInfo.listDiv.classList.contains('active')) { groupInfo.titleElement.click(); foldedCount++; }
+            if (groupInfo.listDiv.classList.contains('active')) {
+                groupInfo.titleElement.click();
+                foldedCount++;
+            }
         });
-        if (foldedCount > 0) { window.scrollTo({ top: 0, behavior: 'smooth' }); showNotification(`Folded ${foldedCount} group(s).`); } 
-        else { showNotification('All groups are already folded.'); }
+        if (foldedCount > 0) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showNotification(`Folded ${foldedCount} group(s).`);
+        } else {
+             showNotification('All groups are already folded.');
+        }
         settingsPanel.classList.add('hidden');
         settingsButton.setAttribute('aria-expanded', 'false');
     };
@@ -331,10 +404,12 @@ document.addEventListener('DOMContentLoaded', () => {
      * Event Listeners
      ***************************************************/
     settingsButton.addEventListener('click', toggleSettingsPanel);
-    document.addEventListener('click', (event) => { /* ... No changes needed here ... */
-        if (!settingsPanel.classList.contains('hidden') && !settingsPanel.contains(event.target) && !settingsButton.contains(event.target)) { toggleSettingsPanel(); }
+    document.addEventListener('click', (event) => {
+        if (!settingsPanel.classList.contains('hidden') && !settingsPanel.contains(event.target) && !settingsButton.contains(event.target)) {
+            toggleSettingsPanel();
+        }
     });
-    underscoreToggle.addEventListener('change', () => { /* ... No changes needed here ... */
+    underscoreToggle.addEventListener('change', () => {
         displayUnderscores = underscoreToggle.checked;
         localStorage.setItem('displayUnderscores', displayUnderscores);
         renderAllGroups();
@@ -343,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     foldAllButton.addEventListener('click', foldAllGroups);
 
-    document.addEventListener('keydown', (event) => { /* ... No changes needed here ... */
+    document.addEventListener('keydown', (event) => {
         if (event.shiftKey && event.key.toUpperCase() === 'F') { event.preventDefault(); foldAllGroups(); }
         if (event.key === 'Escape') {
             if (!settingsPanel.classList.contains('hidden')) toggleSettingsPanel();
@@ -368,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Initialization failed:", error);
             if (initialLoader && displayContainer.contains(initialLoader)) {
                  initialLoader.textContent = 'Failed to initialize application.';
-                 initialLoader.classList.add('text-red-500');
+                 initialLoader.classList.add('text-red-400');
             }
         }
     };
