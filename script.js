@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
      ***************************************************/
     const fetchExplanation = async (tag) => {
         // --- Vercel Backend Method ---
-        
         try {
             const response = await fetch('/api/explain', {
                 method: 'POST',
@@ -49,7 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to fetch explanation:', error);
             return `Error: ${error.message}`;
         }
-        
+    }; // <-- THIS IS THE MISSING BRACE!
+
     /***************************************************
      * Utility Functions
      ***************************************************/
