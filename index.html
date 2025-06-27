@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Danbooru Tag Search</title>
+    <title>Danbooru Tag Explorer</title>
 
     <!-- Link to Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,55 +13,71 @@
     <!-- Link to Tailwind CSS for utility classes -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Link to your new external CSS file -->
+    <!-- Link to your external CSS file -->
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col bg-transition">
+<body class="bg-primary text-primary antialiased">
 
-    <header class="bg-gray-800/80 backdrop-blur-sm shadow-md sticky top-0 z-50 bg-transition border-b border-gray-700/60">
-        <div class="container mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-bold text-gray-100 tracking-tight">Danbooru Tag Explorer</h1>
-            <button id="settingsButton" aria-label="Open Settings" aria-haspopup="true" aria-expanded="false" class="p-2 rounded-full text-gray-400 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 focus:ring-offset-gray-900 transition-colors">
+    <!-- New "Hero" Header Section -->
+    <header class="page-header">
+        <div class="gemini-icon-wrapper is-header-icon">
+             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path class="gem-secondary-sparkle" d="M3.75 9.75L5.25 6.75L8.25 5.25L5.25 3.75L3.75 0.75L2.25 3.75L-0.75 5.25L2.25 6.75L3.75 9.75Z" transform="translate(4, 3)"/>
+                <path class="gem-secondary-sparkle" d="M3 6L4 4L6 3L4 2L3 0L2 2L0 3L2 4L3 6Z" transform="translate(15, 15)"/>
+                <path class="gem-secondary-sparkle" d="M3 6L4 4L6 3L4 2L3 0L2 2L0 3L2 4L3 6Z" transform="translate(1, 15)"/>
+                <path class="gem-main-sparkle" d="M12 18L14.25 12.75L19.5 10.5L14.25 8.25L12 3L9.75 8.25L4.5 10.5L9.75 12.75L12 18Z"/>
+            </svg>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-bold text-primary tracking-tight">Danbooru Tag Explorer</h1>
+        <p class="text-secondary mt-3 max-w-2xl mx-auto">
+            A modern interface for browsing Danbooru tag groups, enhanced with AI-powered explanations to master your prompts.
+        </p>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 w-full">
+        <!-- Settings Button is now above the content -->
+        <div class="text-right mb-4">
+             <button id="settingsButton" aria-label="Open Settings" aria-haspopup="true" aria-expanded="false" class="button-icon-secondary">
                 <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/settings-2.svg" alt="Settings" class="w-5 h-5"/>
             </button>
         </div>
-        <div id="settingsPanel" class="absolute right-4 md:right-6 mt-2 w-60 rounded-xl shadow-lg bg-gray-800 border border-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-50" role="menu" aria-orientation="vertical" aria-labelledby="settingsButton" tabindex="-1">
-            <div class="p-1.5" role="none">
-                <label for="underscoreToggle" class="flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-white/10 rounded-lg cursor-pointer transition-colors" role="menuitem" tabindex="-1">
-                    <input type="checkbox" id="underscoreToggle" class="h-4 w-4 rounded border-gray-500 text-indigo-500 focus:ring-indigo-500 bg-gray-600 checked:bg-indigo-500 focus:ring-offset-0">
+
+        <!-- Settings Panel -->
+        <div id="settingsPanel" class="absolute right-4 sm:right-auto mt-2 w-60 rounded-xl shadow-lg bg-surface border border-default ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-50" role="menu" aria-orientation="vertical" aria-labelledby="settingsButton" tabindex="-1">
+            <div class="p-2" role="none">
+                <label for="underscoreToggle" class="flex items-center gap-3 px-3 py-2 text-sm text-primary hover:bg-hover rounded-lg cursor-pointer" role="menuitem" tabindex="-1">
+                    <input type="checkbox" id="underscoreToggle" class="h-4 w-4 rounded border-default text-accent bg-primary checked:bg-accent focus:ring-accent focus:ring-offset-surface">
                     Display Underscores
                 </label>
-                 <div class="border-t border-gray-700 my-1"></div>
-                 <button id="foldAllButton" class="w-full text-left flex items-center gap-3 px-3 py-2 text-sm text-gray-200 hover:bg-white/10 rounded-lg transition-colors" role="menuitem" tabindex="-1">
-                     <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevrons-up.svg" alt="" class="w-4 h-4 inline-block text-gray-400"/>
+                 <div class="border-t border-default my-1"></div>
+                 <button id="foldAllButton" class="w-full text-left flex items-center gap-3 px-3 py-2 text-sm text-primary hover:bg-hover rounded-lg" role="menuitem" tabindex="-1">
+                     <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/chevrons-up.svg" alt="" class="w-4 h-4 text-secondary"/>
                      Fold All (Shift+F)
                  </button>
             </div>
         </div>
-    </header>
 
-    <main class="container mx-auto p-4 md:p-6 flex-grow">
         <div id="json-display" class="space-y-4">
             <div id="initial-loader" class="flex items-center justify-center h-40 pt-10">
                  <div class="loader"></div>
-                 <span class="ml-3 text-gray-400">Loading tags...</span>
+                 <span class="ml-3 text-secondary">Loading tags...</span>
             </div>
         </div>
     </main>
 
-    <footer class="bg-gray-800/80 border-t border-gray-700/60 text-center p-4 text-sm text-gray-400 mt-8 bg-transition">
-        Made by A13JM. Revamped by an AI Assistant.
+    <footer class="text-center p-8 mt-12 text-sm text-secondary">
+        Made by A13JM. Redesigned with AI assistance.
     </footer>
 
-    <div id="notification" class="fixed bottom-5 right-5 bg-gray-100 text-gray-900 px-5 py-3 rounded-lg shadow-2xl opacity-0 transform translate-y-2 transition-all duration-300 ease-in-out z-[100] font-medium">
+    <div id="notification" class="fixed bottom-5 right-5 bg-notification-bg text-on-primary-bg px-5 py-3 rounded-lg shadow-2xl opacity-0 transform translate-y-2 transition-all duration-300 z-[100] font-medium">
     </div>
 
     <!-- AI Explanation Modal -->
-    <div id="aiExplainModal" class="hidden fixed inset-0 bg-black/60 z-[101] flex items-center justify-center p-4">
+    <div id="aiExplainModal" class="hidden fixed inset-0 bg-black/70 z-[101] flex items-center justify-center p-4">
         <div id="modalOverlay" class="absolute inset-0"></div>
-        <div class="modal-content relative bg-slate-800 border border-slate-700/80 rounded-xl shadow-2xl w-full max-w-md m-4">
-            <div class="modal-header-gradient flex items-center justify-between p-4 border-b border-slate-700/60 rounded-t-xl">
+        <div class="modal-content relative bg-surface border border-default rounded-xl shadow-2xl w-full max-w-md m-4">
+            <div class="modal-header-gradient flex items-center justify-between p-4 border-b border-default rounded-t-xl">
                 <div class="flex items-center gap-3">
                     <div class="gemini-icon-wrapper">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -71,25 +87,24 @@
                             <path class="gem-main-sparkle" d="M12 18L14.25 12.75L19.5 10.5L14.25 8.25L12 3L9.75 8.25L4.5 10.5L9.75 12.75L12 18Z"/>
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-100">Tag Explanation</h3>
+                    <h3 class="text-lg font-semibold text-primary">Tag Explanation</h3>
                 </div>
-                <button id="modalCloseButton" class="p-1.5 rounded-full text-gray-400 hover:bg-white/10 hover:text-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 focus:ring-offset-slate-800">
+                <button id="modalCloseButton" class="button-icon-secondary is-close-button">
                     <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/x.svg" alt="Close" class="w-5 h-5"/>
                 </button>
             </div>
             <div class="p-5">
-                <div class="flex items-center gap-2 mb-3">
-                    <span class="text-sm text-gray-400">Tag:</span>
-                    <code id="modalTag" class="px-2 py-1 bg-slate-700/80 rounded-md text-indigo-300 font-mono text-sm"></code>
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-sm text-secondary">Tag:</span>
+                    <code id="modalTag" class="px-2 py-1 bg-hover rounded-md text-accent-light font-mono text-sm"></code>
                 </div>
-                <div id="modalExplanation" class="text-gray-300 leading-relaxed">
-                    <!-- Loader will be injected here -->
+                <div id="modalExplanation" class="text-secondary leading-relaxed">
+                    <!-- Content injected by JS -->
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Link to your new external JavaScript file -->
     <script src="script.js"></script>
 </body>
 </html>
