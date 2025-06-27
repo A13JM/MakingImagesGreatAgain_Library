@@ -122,3 +122,17 @@ main {
 .modal-header-gradient {
     background: linear-gradient(to bottom, #334155, #1e293b); /* slate-700 to slate-800 */
 }
+/* --- Add this new CSS at the bottom of your style.css file --- */
+
+/* Initial state of the explanation text: hidden and slightly moved up */
+#modalExplanation {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+/* The state when it becomes visible */
+#modalExplanation.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
