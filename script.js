@@ -126,7 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const fragment = document.createDocumentFragment();
-        for (const [key, value] of Object.entries(globalJsonData)) {
+        const sortedEntries = Object.entries(globalJsonData).sort((a, b) => a[0].localeCompare(b[0]));
+        for (const [key, value] of sortedEntries) {
             const categoryDiv = document.createElement('div');
             categoryDiv.className = 'group-card';
             renderGroup(key, value, categoryDiv, true);
@@ -174,7 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
                 const subFragment = document.createDocumentFragment();
                 let hasContent = false;
-                for (const [subKey, subValue] of Object.entries(value)) {
+                const sortedEntries = Object.entries(value).sort((a, b) => a[0].localeCompare(b[0]));
+                for (const [subKey, subValue] of sortedEntries) {
                     if (subKey.toLowerCase() === 'list_tags' && Array.isArray(subValue)) {
                         renderListItems(subValue, container); hasContent = true;
                     } else {
